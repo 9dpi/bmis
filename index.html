@@ -79,6 +79,9 @@
             border-left: 4px solid transparent;
             font-size: 13px;
             cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
         }
 
         .dark .nav-link {
@@ -175,13 +178,6 @@
             background: #000;
         }
 
-        .cam-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.6;
-        }
-
         [x-cloak] {
             display: none !important;
         }
@@ -237,30 +233,33 @@
             <nav class="flex-grow py-4 overflow-y-auto">
                 <div class="px-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hệ thống</div>
                 <div @click="section = 'overview'" :class="section === 'overview' ? 'active' : ''"
-                    class="nav-link flex items-center px-6 py-4">
+                    class="nav-link px-6 py-4">
                     <i class="fas fa-chart-pie mr-3 w-5 text-lg"></i> Tổng quan vận hành
                 </div>
                 <div @click="section = 'roadmap'" :class="section === 'roadmap' ? 'active' : ''"
-                    class="nav-link flex items-center px-6 py-4">
+                    class="nav-link px-6 py-4">
                     <i class="fas fa-project-diagram mr-3 w-5 text-lg"></i> Lộ trình triển khai
                 </div>
+
+                <a href="home.html" target="_blank" class="nav-link px-6 py-4 text-orange-500 hover:text-orange-400">
+                    <i class="fas fa-mobile-alt mr-3 w-5 text-lg animate-pulse"></i>
+                    <span class="font-bold">SCP Resident App</span>
+                    <i class="fas fa-external-link-alt ml-auto text-[10px] opacity-50"></i>
+                </a>
+
                 <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Quản lý cư
                     dân</div>
-                <div class="nav-link flex items-center px-6 py-3"><i class="fas fa-door-open mr-3 w-5"></i> Danh sách
-                    căn hộ</div>
-                <div class="nav-link flex items-center px-6 py-3"><i class="fas fa-bullhorn mr-3 w-5"></i> Thông báo
-                    [GĐ1]</div>
-                <div class="nav-link flex items-center px-6 py-3"><i class="fas fa-credit-card mr-3 w-5"></i> SCP Pay
-                    [GĐ2]</div>
+                <div class="nav-link px-6 py-3"><i class="fas fa-door-open mr-3 w-5"></i> Danh sách căn hộ</div>
+                <div class="nav-link px-6 py-3"><i class="fas fa-bullhorn mr-3 w-5"></i> Thông báo [GĐ1]</div>
+                <div class="nav-link px-6 py-3"><i class="fas fa-credit-card mr-3 w-5"></i> SCP Pay [GĐ2]</div>
+
                 <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dịch vụ & Kỹ
                     thuật</div>
-                <div class="nav-link flex items-center px-6 py-3"><i class="fas fa-dumbbell mr-3 w-5"></i> Tiện ích
-                    Gym/Pool</div>
-                <div class="nav-link flex items-center px-6 py-3"><i class="fas fa-tools mr-3 w-5"></i> Đội ngũ kỹ thuật
-                </div>
+                <div class="nav-link px-6 py-3"><i class="fas fa-dumbbell mr-3 w-5"></i> Tiện ích Gym/Pool</div>
+                <div class="nav-link px-6 py-3"><i class="fas fa-tools mr-3 w-5"></i> Đội ngũ kỹ thuật</div>
             </nav>
 
-            <div class="p-6 border-t flex items-center justify-between transition-colors"
+            <div class="p-6 border-t flex items-center justify-between"
                 :class="darkMode ? 'border-slate-800' : 'border-slate-200'">
                 <div class="flex items-center gap-3">
                     <div class="status-dot"></div>
@@ -268,7 +267,7 @@
                         :class="darkMode ? 'text-slate-400' : 'text-slate-600'">Online</span>
                 </div>
                 <button @click="darkMode = !darkMode; updateCharts()"
-                    class="p-2 bg-slate-800 dark:bg-slate-700 text-yellow-500 rounded-lg hover:scale-105 transition-transform">
+                    class="p-2 bg-slate-800 dark:bg-slate-700 text-yellow-500 rounded-lg">
                     <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
                 </button>
             </div>
@@ -284,7 +283,7 @@
                         x-text="section === 'overview' ? 'DASHBOARD GIÁM SÁT' : 'ROADMAP PHÁT TRIỂN'"></h3>
                 </div>
                 <div class="text-right">
-                    <p class="text-[9px] opacity-50 uppercase font-bold transition-colors"
+                    <p class="text-[9px] opacity-50 uppercase font-bold"
                         :class="darkMode ? 'text-white' : 'text-slate-900'">Điện năng hôm nay</p>
                     <p class="text-xl font-black text-amber-500 tracking-tighter" x-text="liveKwh + ' kWh'"></p>
                 </div>
@@ -309,23 +308,23 @@
                             <div class="text-xl font-black text-purple-400" x-text="aqi"></div>
                             <div class="h-[45px] mt-2"><canvas id="chartAQI"></canvas></div>
                         </div>
-                        <div class="stat-card"><span class="text-[9px] font-bold text-slate-500 uppercase block">Cư
-                                dân</span>
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase block">Cư dân</span>
                             <div class="text-xl font-black" :class="darkMode ? 'text-white' : 'text-slate-800'">4,250
                             </div>
                             <div class="mt-4 text-[8px] text-emerald-500 font-bold uppercase"><i
                                     class="fas fa-caret-up"></i> 1.2% Trend</div>
                         </div>
-                        <div class="stat-card"><span class="text-[9px] font-bold text-slate-500 uppercase block">Căn
-                                hộ</span>
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase block">Căn hộ</span>
                             <div class="text-xl font-black" :class="darkMode ? 'text-white' : 'text-slate-800'">1,500
                             </div>
                             <div class="mt-4 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                 <div class="bg-blue-500 h-full w-[95%]"></div>
                             </div>
                         </div>
-                        <div class="stat-card border-amber-500/20"><span
-                                class="text-[9px] font-bold text-slate-500 uppercase block">Phí thu</span>
+                        <div class="stat-card border-amber-500/20">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase block">Phí thu</span>
                             <div class="text-xl font-black text-amber-500">2.1 tỷ</div>
                             <div class="h-[45px] mt-2"><canvas id="chartFee"></canvas></div>
                         </div>
@@ -338,7 +337,7 @@
                             </h4>
                             <div class="cam-container border border-slate-700 relative mb-4">
                                 <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600"
-                                    class="w-full h-full object-cover opacity-80 dark:opacity-60">
+                                    class="w-full h-full object-cover opacity-60">
                                 <div
                                     class="absolute top-2 left-2 bg-blue-600 px-2 py-0.5 text-[8px] font-bold rounded uppercase text-white font-black">
                                     Lobby Central - Security</div>
@@ -348,7 +347,7 @@
                                 thêm camera</button>
                         </div>
 
-                        <div class="stat-card flex flex-col" x-data="{ t1: 42, t2: 5, t5: 12, t6: 28 }">
+                        <div class="stat-card flex flex-col" x-data="{ t1: 42, t2: 5 }">
                             <h4 class="text-[10px] font-bold uppercase mb-4 text-blue-400">Tần suất thang máy</h4>
                             <div class="grid grid-cols-2 gap-2 text-[9px] font-black mb-4 transition-colors"
                                 :class="darkMode ? 'text-white' : 'text-slate-700'"
@@ -365,13 +364,6 @@
                                 <div class="p-2 bg-slate-100 dark:bg-slate-800/40 rounded flex justify-between">
                                     <span>PCCC</span><span
                                         class="text-slate-400 uppercase tracking-tighter">Ready</span></div>
-                                <div class="p-2 bg-slate-100 dark:bg-slate-800/40 rounded flex justify-between">
-                                    <span>Guest</span><span class="text-emerald-500 font-bold"><span
-                                            x-text="'T'+t5"></span></span></div>
-                                <div
-                                    class="p-2 bg-slate-100 dark:bg-slate-800/40 rounded flex justify-between border border-blue-500/20">
-                                    <span>Priority</span><span class="text-blue-500 font-bold"><span
-                                            x-text="'T'+t6"></span></span></div>
                             </div>
                             <div class="flex-grow min-h-[140px]"><canvas id="chartElevator"></canvas></div>
                         </div>
@@ -380,102 +372,39 @@
                             <h4 class="text-[10px] font-bold uppercase mb-4 text-blue-400 tracking-widest">Giao thông hạ
                                 tầng</h4>
                             <div class="grid grid-cols-2 gap-2 mb-4">
-                                <div
-                                    class="p-2 rounded border border-slate-200 dark:border-slate-700 text-center text-white">
+                                <div class="p-2 rounded border border-slate-700 text-center">
                                     <p class="text-[7px] opacity-50 uppercase font-black"
                                         :class="darkMode ? 'text-white' : 'text-slate-900'">Xe điện</p>
                                     <p class="text-xs font-black text-yellow-500">45/60</p>
                                 </div>
-                                <div
-                                    class="p-2 rounded border border-slate-200 dark:border-slate-700 text-center text-white">
-                                    <p class="text-[7px] opacity-50 uppercase font-black"
-                                        :class="darkMode ? 'text-white' : 'text-slate-900'">Logistics</p>
-                                    <p class="text-xs font-black text-blue-400">03/05</p>
-                                </div>
-                                <div
-                                    class="p-2 rounded border border-slate-200 dark:border-slate-700 text-center text-white">
+                                <div class="p-2 rounded border border-slate-700 text-center">
                                     <p class="text-[7px] opacity-50 uppercase font-black"
                                         :class="darkMode ? 'text-white' : 'text-slate-900'">Ô tô</p>
                                     <p class="text-xs font-black text-blue-500">342/400</p>
-                                </div>
-                                <div
-                                    class="p-2 rounded border border-slate-200 dark:border-slate-700 text-center text-white">
-                                    <p class="text-[7px] opacity-50 uppercase font-black"
-                                        :class="darkMode ? 'text-white' : 'text-slate-900'">Xe máy</p>
-                                    <p class="text-xs font-black text-emerald-500">1.1k/1.5k</p>
                                 </div>
                             </div>
                             <div class="flex-grow min-h-[140px]"><canvas id="chartTrafficTrend"></canvas></div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div class="stat-card p-4 flex items-center gap-3"><i class="fas fa-faucet text-blue-500"></i>
-                            <div>
-                                <p class="text-[8px] text-slate-500 uppercase font-bold">Thoát nước</p>
-                                <p class="text-[10px] font-black" :class="darkMode ? 'text-white' : 'text-slate-700'">Ổn
-                                    định</p>
-                            </div>
-                        </div>
-                        <div class="stat-card p-4 flex items-center gap-3 border-amber-500/30"><i
-                                class="fas fa-trash text-amber-500"></i>
-                            <div>
-                                <p class="text-[8px] text-slate-500 uppercase font-bold">Rác thải</p>
-                                <p class="text-[10px] font-black text-amber-500">75% Đầy</p>
-                            </div>
-                        </div>
-                        <div class="stat-card p-4 flex items-center gap-3"><i
-                                class="fas fa-lightbulb text-blue-400"></i>
-                            <div>
-                                <p class="text-[8px] text-slate-500 uppercase font-bold">Chiếu sáng</p>
-                                <p class="text-[10px] font-black uppercase"
-                                    :class="darkMode ? 'text-white' : 'text-slate-700'">Auto</p>
-                            </div>
-                        </div>
-                        <div class="stat-card p-4 flex items-center gap-3"><i class="fas fa-store text-purple-400"></i>
-                            <div>
-                                <p class="text-[8px] text-slate-500 uppercase font-bold">Cửa hàng</p>
-                                <p class="text-[10px] font-black" :class="darkMode ? 'text-white' : 'text-slate-700'">
-                                    12/12 Mở</p>
-                            </div>
-                        </div>
-                        <div class="stat-card p-4 flex items-center gap-3 border-emerald-500/20"><i
-                                class="fas fa-broom text-emerald-500"></i>
-                            <div>
-                                <p class="text-[8px] text-slate-500 uppercase font-bold">Vệ sinh</p>
-                                <p class="text-[10px] font-black text-emerald-500">Xong</p>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="stat-card overflow-hidden">
                         <div
-                            class="p-4 bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-700 border-slate-200 uppercase text-[10px] font-black text-blue-500">
+                            class="p-4 bg-slate-800/30 border-b border-slate-700 uppercase text-[10px] font-black text-blue-500">
                             Phản hồi cư dân gần đây (UC-26)</div>
                         <table class="w-full text-left text-[11px]" :class="darkMode ? 'text-white' : 'text-slate-700'">
-                            <tbody class="divide-y dark:divide-slate-800/50 divide-slate-100">
+                            <tbody class="divide-y divide-slate-800/50">
                                 <tr @click="showModal = true; selectedIssue = {room: 'CH-1204', desc: 'Chiếu sáng sảnh bị hỏng', status: 'Chờ xử lý', date: '30/12/2025'}"
                                     class="cursor-pointer hover:bg-blue-500/5">
                                     <td class="p-4 font-bold text-blue-500">CH-1204</td>
-                                    <td class="p-4 opacity-80 italic text-white dark:text-white">Chiếu sáng sảnh bị hỏng
-                                    </td>
+                                    <td class="p-4 opacity-80 italic">Chiếu sáng sảnh bị hỏng</td>
                                     <td class="p-4 text-right text-red-500 font-bold uppercase text-[9px]">Chờ xử lý
                                     </td>
                                 </tr>
-                                <tr @click="showModal = true; selectedIssue = {room: 'CH-0815', desc: 'Cấp thêm thẻ xe cư dân', status: 'Đã xử lý', date: '29/12/2025'}"
-                                    class="text-emerald-500 font-bold cursor-pointer hover:bg-emerald-500/5">
+                                <tr class="text-emerald-500 font-bold">
                                     <td class="p-4">CH-0815</td>
                                     <td class="p-4 italic opacity-80">Cấp thêm thẻ xe cư dân</td>
                                     <td class="p-4 text-right"><span
-                                            class="bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500 text-[9px] uppercase font-black">Đã
-                                            xử lý</span></td>
-                                </tr>
-                                <tr @click="showModal = true; selectedIssue = {room: 'CH-2110', desc: 'Vệ sinh sau tiệc BBQ', status: 'Đã xử lý', date: '28/12/2025'}"
-                                    class="text-emerald-500 font-bold cursor-pointer hover:bg-emerald-500/5">
-                                    <td class="p-4">CH-2110</td>
-                                    <td class="p-4 italic opacity-80">Vệ sinh sau tiệc BBQ</td>
-                                    <td class="p-4 text-right"><span
-                                            class="bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500 text-[9px] uppercase font-black">Đã
+                                            class="bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500 text-[9px] uppercase font-black">Đã
                                             xử lý</span></td>
                                 </tr>
                             </tbody>
@@ -485,47 +414,25 @@
 
                 <div x-show="section === 'roadmap'" class="space-y-6">
                     <div class="stat-card p-8 bg-blue-900/10 border-blue-500/30">
-                        <h4 class="font-black text-blue-500 uppercase text-lg mb-8 flex justify-between items-center">
-                            <span>Hệ sinh thái SCP (Giai đoạn 1)</span>
-                            <span
-                                class="text-emerald-500 font-black text-[10px] border border-emerald-500 px-3 py-1 rounded uppercase tracking-tighter">Verified
-                                100%</span>
-                        </h4>
+                        <h4 class="font-black text-blue-500 uppercase text-lg mb-8">Hệ sinh thái SCP (Giai đoạn 1)</h4>
                         <div
                             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 uppercase font-black text-[10px]">
                             <div
-                                class="p-4 dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-xl flex items-center gap-4 text-blue-500">
+                                class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl flex items-center gap-4 text-blue-500">
                                 <i class="fas fa-mobile-alt text-2xl"></i><span
                                     :class="darkMode ? 'text-white' : 'text-slate-800'">App cư dân</span></div>
                             <div
-                                class="p-4 dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-xl flex items-center gap-4 text-emerald-500">
+                                class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl flex items-center gap-4 text-emerald-500">
                                 <i class="fas fa-shield-alt text-2xl"></i><span
                                     :class="darkMode ? 'text-white' : 'text-slate-800'">App an ninh</span></div>
                             <div
-                                class="p-4 dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-xl flex items-center gap-4 text-red-500">
+                                class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl flex items-center gap-4 text-red-500">
                                 <i class="fas fa-fire-extinguisher text-2xl"></i><span
                                     :class="darkMode ? 'text-white' : 'text-slate-800'">Hệ thống báo cháy</span></div>
                             <div
-                                class="p-4 dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-xl flex items-center gap-4 text-orange-500">
-                                <i class="fas fa-thermometer-high text-2xl"></i><span
-                                    :class="darkMode ? 'text-white' : 'text-slate-800'">Cảnh báo quá nhiệt</span></div>
-                            <div
-                                class="p-4 dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-xl flex items-center gap-4 text-purple-500">
+                                class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl flex items-center gap-4 text-purple-500">
                                 <i class="fas fa-video text-2xl"></i><span
                                     :class="darkMode ? 'text-white' : 'text-slate-800'">Camera AI tự động</span></div>
-                            <div
-                                class="p-4 dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-xl flex items-center gap-4 text-amber-500">
-                                <i class="fas fa-traffic-light text-2xl"></i><span
-                                    :class="darkMode ? 'text-white' : 'text-slate-800'">Điều tiết giao thông</span>
-                            </div>
-                            <div
-                                class="p-4 dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-xl flex items-center gap-4 text-blue-300">
-                                <i class="fas fa-tint text-2xl"></i><span
-                                    :class="darkMode ? 'text-white' : 'text-slate-800'">Sensor nước sạch</span></div>
-                            <div
-                                class="p-4 dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-xl flex items-center gap-4 text-emerald-600">
-                                <i class="fas fa-leaf text-2xl"></i><span
-                                    :class="darkMode ? 'text-white' : 'text-slate-800'">Năng lượng xanh</span></div>
                         </div>
                     </div>
                 </div>
@@ -545,8 +452,6 @@
                             x-text="selectedIssue?.desc"></span></div>
                     <div><span class="opacity-50 text-[10px] block font-bold uppercase">Trạng thái:</span> <span
                             class="font-bold text-blue-500" x-text="selectedIssue?.status"></span></div>
-                    <div><span class="opacity-50 text-[10px] block font-bold uppercase">Ngày ghi nhận:</span> <span
-                            x-text="selectedIssue?.date"></span></div>
                 </div>
                 <button @click="showModal = false"
                     class="w-full mt-6 py-3 bg-blue-600 text-white font-black uppercase text-xs rounded-lg shadow-lg">Đóng</button>
@@ -586,7 +491,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 8, weight: 'bold' } } } } }
             });
 
-            // Logic dữ liệu động cho biểu đồ mini
             setInterval(() => {
                 [charts.temp, charts.humid, charts.aqi].forEach(chart => {
                     chart.data.datasets[0].data.shift();
