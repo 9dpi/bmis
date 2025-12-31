@@ -28,6 +28,15 @@
             transition: background-color 0.3s;
         }
 
+        html {
+            background-color: #020617;
+            transition: background-color 0.3s;
+        }
+
+        .light html {
+            background-color: #f1f5f9;
+        }
+
         .app-wrapper {
             display: flex;
             height: 100vh;
@@ -229,47 +238,38 @@
                         Building</p>
                 </div>
             </div>
-
             <nav class="flex-grow py-4 overflow-y-auto">
                 <div class="px-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hệ thống</div>
                 <div @click="section = 'overview'" :class="section === 'overview' ? 'active' : ''"
-                    class="nav-link px-6 py-4">
-                    <i class="fas fa-chart-pie mr-3 w-5 text-lg"></i> Tổng quan vận hành
+                    class="nav-link px-6 py-4"><i class="fas fa-chart-pie mr-3 w-5 text-lg"></i> Tổng quan vận hành
                 </div>
                 <div @click="section = 'roadmap'" :class="section === 'roadmap' ? 'active' : ''"
-                    class="nav-link px-6 py-4">
-                    <i class="fas fa-project-diagram mr-3 w-5 text-lg"></i> Lộ trình triển khai
-                </div>
-
+                    class="nav-link px-6 py-4"><i class="fas fa-project-diagram mr-3 w-5 text-lg"></i> Lộ trình triển
+                    khai</div>
                 <a href="home.html" target="_blank" class="nav-link px-6 py-4 text-orange-500 hover:text-orange-400">
-                    <i class="fas fa-mobile-alt mr-3 w-5 text-lg animate-pulse"></i>
-                    <span class="font-bold">SCP Resident App</span>
-                    <i class="fas fa-external-link-alt ml-auto text-[10px] opacity-50"></i>
+                    <i class="fas fa-mobile-alt mr-3 w-5 text-lg animate-pulse"></i><span class="font-bold">SCP Resident
+                        App</span><i class="fas fa-external-link-alt ml-auto text-[10px] opacity-50"></i>
                 </a>
-
                 <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Quản lý cư
                     dân</div>
-                <div class="nav-link px-6 py-3"><i class="fas fa-door-open mr-3 w-5"></i> Danh sách căn hộ</div>
+                <div @click="section = 'apartment'" :class="section === 'apartment' ? 'active' : ''"
+                    class="nav-link px-6 py-3"><i class="fas fa-door-open mr-3 w-5"></i> Danh sách căn hộ</div>
                 <div class="nav-link px-6 py-3"><i class="fas fa-bullhorn mr-3 w-5"></i> Thông báo [GĐ1]</div>
-                <div class="nav-link px-6 py-3"><i class="fas fa-credit-card mr-3 w-5"></i> SCP Pay [GĐ2]</div>
-
+                <div class="nav-link px-6 py-3"><i class="fas fa-credit-card mr-3 w-5"></i> VNPT Pay [GĐ2]</div>
                 <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dịch vụ & Kỹ
                     thuật</div>
                 <div class="nav-link px-6 py-3"><i class="fas fa-dumbbell mr-3 w-5"></i> Tiện ích Gym/Pool</div>
                 <div class="nav-link px-6 py-3"><i class="fas fa-tools mr-3 w-5"></i> Đội ngũ kỹ thuật</div>
             </nav>
-
             <div class="p-6 border-t flex items-center justify-between"
                 :class="darkMode ? 'border-slate-800' : 'border-slate-200'">
                 <div class="flex items-center gap-3">
-                    <div class="status-dot"></div>
-                    <span class="text-[10px] font-bold uppercase tracking-widest"
+                    <div class="status-dot"></div><span class="text-[10px] font-bold uppercase tracking-widest"
                         :class="darkMode ? 'text-slate-400' : 'text-slate-600'">Online</span>
                 </div>
                 <button @click="darkMode = !darkMode; updateCharts()"
-                    class="p-2 bg-slate-800 dark:bg-slate-700 text-yellow-500 rounded-lg">
-                    <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
-                </button>
+                    class="p-2 bg-slate-800 dark:bg-slate-700 text-yellow-500 rounded-lg"><i
+                        :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i></button>
             </div>
         </aside>
 
@@ -280,7 +280,8 @@
                     </h2>
                     <h3 class="text-2xl font-black uppercase tracking-tight transition-colors"
                         :class="darkMode ? 'text-white' : 'text-slate-800'"
-                        x-text="section === 'overview' ? 'DASHBOARD GIÁM SÁT' : 'ROADMAP PHÁT TRIỂN'"></h3>
+                        x-text="section === 'overview' ? 'DASHBOARD GIÁM SÁT' : (section === 'apartment' ? 'QUẢN LÝ CĂN HỘ' : 'ROADMAP PHÁT TRIỂN')">
+                    </h3>
                 </div>
                 <div class="text-right">
                     <p class="text-[9px] opacity-50 uppercase font-bold"
@@ -290,46 +291,45 @@
             </header>
 
             <div class="content-scroll">
-                <div x-show="section === 'overview'" class="space-y-6">
+                <div x-show="section === 'overview'" x-transition class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <div class="stat-card border-emerald-500/20">
-                            <span class="text-[9px] font-bold text-slate-500 uppercase block">Nhiệt độ</span>
+                        <div class="stat-card border-emerald-500/20"><span
+                                class="text-[9px] font-bold text-slate-500 uppercase block">Nhiệt độ</span>
                             <div class="text-xl font-black text-emerald-400" x-text="temp + '°C'"></div>
                             <div class="h-[45px] mt-2"><canvas id="chartTemp"></canvas></div>
                         </div>
-                        <div class="stat-card border-blue-500/20">
-                            <span class="text-[9px] font-bold text-slate-500 uppercase block">Độ ẩm</span>
+                        <div class="stat-card border-blue-500/20"><span
+                                class="text-[9px] font-bold text-slate-500 uppercase block">Độ ẩm</span>
                             <div class="text-xl font-black text-blue-400" x-text="humid + '%'"></div>
                             <div class="h-[45px] mt-2"><canvas id="chartHumid"></canvas></div>
                         </div>
-                        <div class="stat-card border-purple-500/20">
-                            <span class="text-[9px] font-bold text-slate-500 uppercase block"
+                        <div class="stat-card border-purple-500/20"><span
+                                class="text-[9px] font-bold text-slate-500 uppercase block"
                                 :class="darkMode ? 'text-white' : 'text-slate-800'">AQI</span>
                             <div class="text-xl font-black text-purple-400" x-text="aqi"></div>
                             <div class="h-[45px] mt-2"><canvas id="chartAQI"></canvas></div>
                         </div>
-                        <div class="stat-card">
-                            <span class="text-[9px] font-bold text-slate-500 uppercase block">Cư dân</span>
+                        <div class="stat-card"><span class="text-[9px] font-bold text-slate-500 uppercase block">Cư
+                                dân</span>
                             <div class="text-xl font-black" :class="darkMode ? 'text-white' : 'text-slate-800'">4,250
                             </div>
                             <div class="mt-4 text-[8px] text-emerald-500 font-bold uppercase"><i
                                     class="fas fa-caret-up"></i> 1.2% Trend</div>
                         </div>
-                        <div class="stat-card">
-                            <span class="text-[9px] font-bold text-slate-500 uppercase block">Căn hộ</span>
+                        <div class="stat-card"><span class="text-[9px] font-bold text-slate-500 uppercase block">Căn
+                                hộ</span>
                             <div class="text-xl font-black" :class="darkMode ? 'text-white' : 'text-slate-800'">1,500
                             </div>
                             <div class="mt-4 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                 <div class="bg-blue-500 h-full w-[95%]"></div>
                             </div>
                         </div>
-                        <div class="stat-card border-amber-500/20">
-                            <span class="text-[9px] font-bold text-slate-500 uppercase block">Phí thu</span>
+                        <div class="stat-card border-amber-500/20"><span
+                                class="text-[9px] font-bold text-slate-500 uppercase block">Phí thu</span>
                             <div class="text-xl font-black text-amber-500">2.1 tỷ</div>
                             <div class="h-[45px] mt-2"><canvas id="chartFee"></canvas></div>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="stat-card flex flex-col">
                             <h4 class="text-[10px] font-bold uppercase mb-4 text-blue-400 flex justify-between"><span>AI
@@ -340,13 +340,12 @@
                                     class="w-full h-full object-cover opacity-60">
                                 <div
                                     class="absolute top-2 left-2 bg-blue-600 px-2 py-0.5 text-[8px] font-bold rounded uppercase text-white font-black">
-                                    Lobby Central - Security</div>
+                                    Lobby Central</div>
                             </div>
                             <button
                                 class="w-full py-2 bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase rounded-lg border dark:border-slate-700">Xem
                                 thêm camera</button>
                         </div>
-
                         <div class="stat-card flex flex-col" x-data="{ t1: 42, t2: 5 }">
                             <h4 class="text-[10px] font-bold uppercase mb-4 text-blue-400">Tần suất thang máy</h4>
                             <div class="grid grid-cols-2 gap-2 text-[9px] font-black mb-4 transition-colors"
@@ -354,20 +353,23 @@
                                 x-init="setInterval(() => { t1 = Math.floor(Math.random() * 50); t2 = Math.floor(Math.random() * 50); }, 4000)">
                                 <div class="p-2 bg-slate-100 dark:bg-slate-800/40 rounded flex justify-between">
                                     <span>Resident</span><span class="text-emerald-400"><span x-text="'T'+t1"></span> <i
-                                            class="fas fa-caret-up animate-bounce"></i></span></div>
+                                            class="fas fa-caret-up animate-bounce"></i></span>
+                                </div>
                                 <div class="p-2 bg-slate-100 dark:bg-slate-800/40 rounded flex justify-between">
                                     <span>Service</span><span class="text-blue-500"><span x-text="'T'+t2"></span> <i
-                                            class="fas fa-caret-down"></i></span></div>
+                                            class="fas fa-caret-down"></i></span>
+                                </div>
                                 <div
                                     class="p-2 bg-slate-100 dark:bg-slate-800/40 rounded flex justify-between border border-red-500/20">
-                                    <span>Maint</span><span class="text-red-500 uppercase">Fixing</span></div>
+                                    <span>Maint</span><span class="text-red-500 uppercase">Fixing</span>
+                                </div>
                                 <div class="p-2 bg-slate-100 dark:bg-slate-800/40 rounded flex justify-between">
                                     <span>PCCC</span><span
-                                        class="text-slate-400 uppercase tracking-tighter">Ready</span></div>
+                                        class="text-slate-400 uppercase tracking-tighter">Ready</span>
+                                </div>
                             </div>
                             <div class="flex-grow min-h-[140px]"><canvas id="chartElevator"></canvas></div>
                         </div>
-
                         <div class="stat-card flex flex-col">
                             <h4 class="text-[10px] font-bold uppercase mb-4 text-blue-400 tracking-widest">Giao thông hạ
                                 tầng</h4>
@@ -386,7 +388,6 @@
                             <div class="flex-grow min-h-[140px]"><canvas id="chartTrafficTrend"></canvas></div>
                         </div>
                     </div>
-
                     <div class="stat-card overflow-hidden">
                         <div
                             class="p-4 bg-slate-800/30 border-b border-slate-700 uppercase text-[10px] font-black text-blue-500">
@@ -412,27 +413,103 @@
                     </div>
                 </div>
 
-                <div x-show="section === 'roadmap'" class="space-y-6">
-                    <div class="stat-card p-8 bg-blue-900/10 border-blue-500/30">
-                        <h4 class="font-black text-blue-500 uppercase text-lg mb-8">Hệ sinh thái SCP (Giai đoạn 1)</h4>
+                <div x-show="section === 'apartment'" x-transition x-cloak class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="stat-card border-blue-500/20"><span
+                                class="text-[9px] font-bold text-slate-500 uppercase block">Đã bàn giao</span>
+                            <div class="flex justify-between items-end">
+                                <div class="text-2xl font-black text-blue-500">1,425</div>
+                                <div class="text-[10px] font-bold text-emerald-500">95%</div>
+                            </div>
+                        </div>
+                        <div class="stat-card border-amber-500/20"><span
+                                class="text-[9px] font-bold text-slate-500 uppercase block">Chưa bàn giao</span>
+                            <div class="text-2xl font-black text-amber-500">75</div>
+                        </div>
+                        <div class="stat-card border-emerald-500/20"><span
+                                class="text-[9px] font-bold text-slate-500 uppercase block">Cư dân đang ở</span>
+                            <div class="text-2xl font-black text-emerald-500">1,120</div>
+                        </div>
+                        <div class="stat-card border-red-500/20"><span
+                                class="text-[9px] font-bold text-slate-500 uppercase block">Yêu cầu khẩn</span>
+                            <div class="text-2xl font-black text-red-500">12</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-8">
+                        <template x-for="i in 11">
+                            <div class="stat-card group hover:border-blue-500 transition cursor-pointer">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h4 class="text-lg font-black dark:text-white" x-text="'CH-' + (1200 + i)"></h4>
+                                        <p class="text-[10px] text-blue-500 font-bold uppercase">Tòa A - Tầng 12</p>
+                                    </div>
+                                    <span
+                                        :class="i % 3 === 0 ? 'bg-amber-100 text-amber-500 border-amber-500' : 'bg-emerald-100 text-emerald-500 border-emerald-500'"
+                                        class="text-[8px] px-2 py-0.5 rounded font-black uppercase border"
+                                        x-text="i % 3 === 0 ? 'Nợ phí' : 'Đang ở'"></span>
+                                </div>
+                                <div class="space-y-2 mb-4 text-[10px] dark:text-slate-300">
+                                    <div class="flex justify-between"><span>Chủ hộ:</span><span class="font-bold">Cư dân
+                                            SCP</span></div>
+                                    <div class="flex justify-between"><span>Tình trạng:</span><span
+                                            :class="i % 3 === 0 ? 'text-red-500' : 'text-emerald-500'"
+                                            class="font-bold uppercase"
+                                            x-text="i % 3 === 0 ? 'Chưa đóng' : 'Đã đóng'"></span></div>
+                                </div>
+                                <button
+                                    class="w-full py-2 bg-blue-600 text-white text-[9px] font-black uppercase rounded-lg shadow-lg">Quản
+                                    lý chi tiết</button>
+                            </div>
+                        </template>
                         <div
-                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 uppercase font-black text-[10px]">
-                            <div
-                                class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl flex items-center gap-4 text-blue-500">
-                                <i class="fas fa-mobile-alt text-2xl"></i><span
-                                    :class="darkMode ? 'text-white' : 'text-slate-800'">App cư dân</span></div>
-                            <div
-                                class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl flex items-center gap-4 text-emerald-500">
-                                <i class="fas fa-shield-alt text-2xl"></i><span
-                                    :class="darkMode ? 'text-white' : 'text-slate-800'">App an ninh</span></div>
-                            <div
-                                class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl flex items-center gap-4 text-red-500">
-                                <i class="fas fa-fire-extinguisher text-2xl"></i><span
-                                    :class="darkMode ? 'text-white' : 'text-slate-800'">Hệ thống báo cháy</span></div>
-                            <div
-                                class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl flex items-center gap-4 text-purple-500">
-                                <i class="fas fa-video text-2xl"></i><span
-                                    :class="darkMode ? 'text-white' : 'text-slate-800'">Camera AI tự động</span></div>
+                            class="stat-card border-dashed border-2 flex flex-col items-center justify-center space-y-2 opacity-50 hover:opacity-100 transition cursor-pointer">
+                            <i class="fas fa-plus-circle text-2xl text-slate-400"></i><span
+                                class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Thêm căn
+                                hộ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="section === 'roadmap'" x-transition x-cloak class="space-y-6">
+                    <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                        <h4 class="font-black text-blue-500 uppercase text-lg italic">Hệ sinh thái SCP - Roadmap Giai
+                            đoạn 1</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-8">
+                        <div class="stat-card border-blue-500/30 flex flex-col gap-4">
+                            <div class="flex items-center gap-4 text-blue-500"><i
+                                    class="fas fa-mobile-alt text-3xl"></i><span
+                                    class="font-black uppercase text-[11px] dark:text-white">App Cư dân</span></div>
+                            <p class="text-[10px] opacity-60 dark:text-slate-400 leading-relaxed">Ứng dụng đa năng cho
+                                cư dân tòa nhà.</p><span class="text-[8px] font-black text-emerald-500 uppercase">● Đã
+                                triển khai</span>
+                        </div>
+                        <div class="stat-card border-blue-500/30 flex flex-col gap-4">
+                            <div class="flex items-center gap-4 text-emerald-500"><i
+                                    class="fas fa-shield-alt text-3xl"></i><span
+                                    class="font-black uppercase text-[11px] dark:text-white">Hệ thống Security</span>
+                            </div>
+                            <p class="text-[10px] opacity-60 dark:text-slate-400 leading-relaxed">Giám sát và quản lý an
+                                ninh đa tầng.</p><span class="text-[8px] font-black text-emerald-500 uppercase">● Đã
+                                triển khai</span>
+                        </div>
+                        <div class="stat-card border-blue-500/30 flex flex-col gap-4">
+                            <div class="flex items-center gap-4 text-red-500"><i
+                                    class="fas fa-fire-extinguisher text-3xl"></i><span
+                                    class="font-black uppercase text-[11px] dark:text-white">PCCC Thông minh</span>
+                            </div>
+                            <p class="text-[10px] opacity-60 dark:text-slate-400 leading-relaxed">Hệ thống báo cháy tự
+                                động 24/7.</p><span class="text-[8px] font-black text-emerald-500 uppercase">● Đã triển
+                                khai</span>
+                        </div>
+                        <div class="stat-card border-blue-500/30 flex flex-col gap-4">
+                            <div class="flex items-center gap-4 text-purple-500"><i
+                                    class="fas fa-video text-3xl"></i><span
+                                    class="font-black uppercase text-[11px] dark:text-white">Camera AI Vision</span>
+                            </div>
+                            <p class="text-[10px] opacity-60 dark:text-slate-400 leading-relaxed">Nhận diện khuôn mặt và
+                                hành vi.</p><span class="text-[8px] font-black text-emerald-500 uppercase">● Đã triển
+                                khai</span>
                         </div>
                     </div>
                 </div>
@@ -442,7 +519,7 @@
         <div x-show="showModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4" x-cloak>
             <div class="stat-card max-w-md w-full border-blue-500 shadow-2xl" @click.away="showModal = false">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-black uppercase text-blue-400">Chi tiết phản hồi</h3>
+                    <h3 class="font-black uppercase text-blue-400 italic">Chi tiết phản hồi</h3>
                     <i class="fas fa-times cursor-pointer opacity-50 hover:opacity-100" @click="showModal = false"></i>
                 </div>
                 <div class="space-y-4 text-sm" :class="darkMode ? 'text-white' : 'text-slate-800'">
@@ -454,23 +531,14 @@
                             class="font-bold text-blue-500" x-text="selectedIssue?.status"></span></div>
                 </div>
                 <button @click="showModal = false"
-                    class="w-full mt-6 py-3 bg-blue-600 text-white font-black uppercase text-xs rounded-lg shadow-lg">Đóng</button>
+                    class="w-full mt-6 py-3 bg-blue-600 text-white font-black uppercase text-xs rounded-lg">Đóng</button>
             </div>
         </div>
     </div>
 
     <script>
-        const getColors = () => {
-            const isDark = document.body.classList.contains('dark');
-            return { grid: isDark ? '#1e293b' : '#e2e8f0', text: isDark ? '#94a3b8' : '#475569' };
-        };
-
-        const miniCfg = (color) => ({
-            type: 'line',
-            data: { labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], datasets: [{ borderColor: color, data: Array.from({ length: 10 }, () => Math.floor(Math.random() * 10 + 20)), tension: 0.4, borderWidth: 2, pointRadius: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-        });
-
+        const getColors = () => { const isDark = document.body.classList.contains('dark'); return { grid: isDark ? '#1e293b' : '#e2e8f0', text: isDark ? '#94a3b8' : '#475569' }; };
+        const miniCfg = (color) => ({ type: 'line', data: { labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], datasets: [{ borderColor: color, data: Array.from({ length: 10 }, () => Math.floor(Math.random() * 10 + 20)), tension: 0.4, borderWidth: 2, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } } });
         let charts = {};
         window.onload = () => {
             const c = getColors();
@@ -478,35 +546,11 @@
             charts.humid = new Chart(document.getElementById('chartHumid'), miniCfg('#3b82f6'));
             charts.aqi = new Chart(document.getElementById('chartAQI'), miniCfg('#8b5cf6'));
             charts.fee = new Chart(document.getElementById('chartFee'), miniCfg('#f59e0b'));
-
-            charts.elevator = new Chart(document.getElementById('chartElevator'), {
-                type: 'bar',
-                data: { labels: ['6h', '10h', '14h', '18h', '22h'], datasets: [{ backgroundColor: '#3b82f6', borderRadius: 4, data: [120, 450, 200, 310, 180] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: c.text, font: { size: 8, weight: 'bold' } } } } }
-            });
-
-            charts.traffic = new Chart(document.getElementById('chartTrafficTrend'), {
-                type: 'line',
-                data: { labels: ['0h', '8h', '16h', '24h'], datasets: [{ fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', borderWidth: 2, data: [200, 380, 340, 390] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 8, weight: 'bold' } } } } }
-            });
-
-            setInterval(() => {
-                [charts.temp, charts.humid, charts.aqi].forEach(chart => {
-                    chart.data.datasets[0].data.shift();
-                    chart.data.datasets[0].data.push(Math.floor(Math.random() * 10 + 20));
-                    chart.update('none');
-                });
-            }, 3000);
+            charts.elevator = new Chart(document.getElementById('chartElevator'), { type: 'bar', data: { labels: ['6h', '10h', '14h', '18h', '22h'], datasets: [{ backgroundColor: '#3b82f6', borderRadius: 4, data: [120, 450, 200, 310, 180] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: c.text, font: { size: 8, weight: 'bold' } } } } } });
+            charts.traffic = new Chart(document.getElementById('chartTrafficTrend'), { type: 'line', data: { labels: ['0h', '8h', '16h', '24h'], datasets: [{ fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', borderWidth: 2, data: [200, 380, 340, 390] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 8, weight: 'bold' } } } } } });
+            setInterval(() => { [charts.temp, charts.humid, charts.aqi].forEach(chart => { chart.data.datasets[0].data.shift(); chart.data.datasets[0].data.push(Math.floor(Math.random() * 10 + 20)); chart.update('none'); }); }, 3000);
         };
-
-        window.updateCharts = () => {
-            setTimeout(() => {
-                const c = getColors();
-                if (charts.elevator) { charts.elevator.options.scales.x.ticks.color = c.text; charts.elevator.update(); }
-                if (charts.traffic) { charts.traffic.options.scales.x.grid.color = c.grid; charts.traffic.options.scales.x.ticks.color = c.text; charts.traffic.update(); }
-            }, 100);
-        };
+        window.updateCharts = () => { setTimeout(() => { const c = getColors(); if (charts.elevator) { charts.elevator.options.scales.x.ticks.color = c.text; charts.elevator.update(); } if (charts.traffic) { charts.traffic.options.scales.x.grid.color = c.grid; charts.traffic.options.scales.x.ticks.color = c.text; charts.traffic.update(); } }, 100); };
     </script>
 </body>
 
