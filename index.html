@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="vi"
-    x-data="{ section: 'overview', darkMode: true, showModal: false, selectedIssue: null, liveKwh: 1240.5, temp: 26.5, humid: 65, aqi: 42 }"
+    x-data="{ section: 'overview', darkMode: true, showModal: false, selectedIssue: null, liveKwh: 1240.5, temp: 26.5, humid: 65, aqi: 42, filterStatus: 'all', selectedApartment: '' }"
     :class="{ 'dark': darkMode }">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCP BMIS - Smart Connected Platform</title>
+    <title>VNPT BMIS - Smart Connected Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -233,54 +233,60 @@
                 </div>
                 <div>
                     <h1 class="text-2xl font-black tracking-tighter uppercase leading-none"
-                        :class="darkMode ? 'text-white' : 'text-slate-900'">SCP BMIS</h1>
+                        :class="darkMode ? 'text-white' : 'text-slate-900'">VNPT BMIS</h1>
                     <p class="text-[9px] opacity-60 uppercase tracking-widest mt-1 font-bold text-blue-500">Smart
                         Building</p>
                 </div>
             </div>
+
             <nav class="flex-grow py-4 overflow-y-auto">
                 <div class="px-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hệ thống</div>
                 <div @click="section = 'overview'" :class="section === 'overview' ? 'active' : ''"
-                    class="nav-link px-6 py-4"><i class="fas fa-chart-pie mr-3 w-5 text-lg"></i> Tổng quan vận hành
+                    class="nav-link px-6 py-4">
+                    <i class="fas fa-chart-pie mr-3 w-5 text-lg"></i> Tổng quan vận hành
                 </div>
                 <div @click="section = 'roadmap'" :class="section === 'roadmap' ? 'active' : ''"
-                    class="nav-link px-6 py-4"><i class="fas fa-project-diagram mr-3 w-5 text-lg"></i> Lộ trình triển
-                    khai</div>
+                    class="nav-link px-6 py-4">
+                    <i class="fas fa-project-diagram mr-3 w-5 text-lg"></i> Lộ trình triển khai
+                </div>
                 <a href="home.html" target="_blank" class="nav-link px-6 py-4 text-orange-500 hover:text-orange-400">
-                    <i class="fas fa-mobile-alt mr-3 w-5 text-lg animate-pulse"></i><span class="font-bold">SCP Resident
-                        App</span><i class="fas fa-external-link-alt ml-auto text-[10px] opacity-50"></i>
+                    <i class="fas fa-mobile-alt mr-3 w-5 text-lg animate-pulse"></i>
+                    <span class="font-bold">SCP Resident App</span>
+                    <i class="fas fa-external-link-alt ml-auto text-[10px] opacity-50"></i>
                 </a>
                 <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Quản lý cư
                     dân</div>
-                <div @click="section = 'apartment'" :class="section === 'apartment' ? 'active' : ''"
-                    class="nav-link px-6 py-3"><i class="fas fa-door-open mr-3 w-5"></i> Danh sách căn hộ</div>
+                <div @click="section = 'apartment'"
+                    :class="section === 'apartment' || section === 'apartment_detail' ? 'active' : ''"
+                    class="nav-link px-6 py-3">
+                    <i class="fas fa-door-open mr-3 w-5"></i> Danh sách căn hộ
+                </div>
                 <div class="nav-link px-6 py-3"><i class="fas fa-bullhorn mr-3 w-5"></i> Thông báo [GĐ1]</div>
                 <div class="nav-link px-6 py-3"><i class="fas fa-credit-card mr-3 w-5"></i> VNPT Pay [GĐ2]</div>
-                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dịch vụ & Kỹ
-                    thuật</div>
-                <div class="nav-link px-6 py-3"><i class="fas fa-dumbbell mr-3 w-5"></i> Tiện ích Gym/Pool</div>
-                <div class="nav-link px-6 py-3"><i class="fas fa-tools mr-3 w-5"></i> Đội ngũ kỹ thuật</div>
             </nav>
+
             <div class="p-6 border-t flex items-center justify-between"
                 :class="darkMode ? 'border-slate-800' : 'border-slate-200'">
                 <div class="flex items-center gap-3">
-                    <div class="status-dot"></div><span class="text-[10px] font-bold uppercase tracking-widest"
+                    <div class="status-dot"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest"
                         :class="darkMode ? 'text-slate-400' : 'text-slate-600'">Online</span>
                 </div>
                 <button @click="darkMode = !darkMode; updateCharts()"
-                    class="p-2 bg-slate-800 dark:bg-slate-700 text-yellow-500 rounded-lg"><i
-                        :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i></button>
+                    class="p-2 bg-slate-800 dark:bg-slate-700 text-yellow-500 rounded-lg">
+                    <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
+                </button>
             </div>
         </aside>
 
         <div class="main-container">
             <header class="main-header shadow-sm">
                 <div>
-                    <h2 class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Dự án: SCP Complex Center
+                    <h2 class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Dự án: VNPT Complex Center
                     </h2>
                     <h3 class="text-2xl font-black uppercase tracking-tight transition-colors"
                         :class="darkMode ? 'text-white' : 'text-slate-800'"
-                        x-text="section === 'overview' ? 'DASHBOARD GIÁM SÁT' : (section === 'apartment' ? 'QUẢN LÝ CĂN HỘ' : 'ROADMAP PHÁT TRIỂN')">
+                        x-text="section === 'overview' ? 'DASHBOARD GIÁM SÁT' : (section === 'apartment' ? 'QUẢN LÝ CĂN HỘ' : (section === 'apartment_detail' ? 'CHI TIẾT CĂN HỘ ' + selectedApartment : 'ROADMAP TRIỂN KHAI'))">
                     </h3>
                 </div>
                 <div class="text-right">
@@ -311,15 +317,15 @@
                         </div>
                         <div class="stat-card"><span class="text-[9px] font-bold text-slate-500 uppercase block">Cư
                                 dân</span>
-                            <div class="text-xl font-black" :class="darkMode ? 'text-white' : 'text-slate-800'">4,250
-                            </div>
-                            <div class="mt-4 text-[8px] text-emerald-500 font-bold uppercase"><i
+                            <div class="text-xl font-black dark:text-white" :class="darkMode ? '' : 'text-slate-800'">
+                                4,250</div>
+                            <div class="mt-4 text-[8px] text-emerald-500 font-bold uppercase tracking-widest"><i
                                     class="fas fa-caret-up"></i> 1.2% Trend</div>
                         </div>
                         <div class="stat-card"><span class="text-[9px] font-bold text-slate-500 uppercase block">Căn
                                 hộ</span>
-                            <div class="text-xl font-black" :class="darkMode ? 'text-white' : 'text-slate-800'">1,500
-                            </div>
+                            <div class="text-xl font-black dark:text-white" :class="darkMode ? '' : 'text-slate-800'">
+                                1,500</div>
                             <div class="mt-4 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                 <div class="bg-blue-500 h-full w-[95%]"></div>
                             </div>
@@ -330,6 +336,7 @@
                             <div class="h-[45px] mt-2"><canvas id="chartFee"></canvas></div>
                         </div>
                     </div>
+
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="stat-card flex flex-col">
                             <h4 class="text-[10px] font-bold uppercase mb-4 text-blue-400 flex justify-between"><span>AI
@@ -394,7 +401,7 @@
                             Phản hồi cư dân gần đây (UC-26)</div>
                         <table class="w-full text-left text-[11px]" :class="darkMode ? 'text-white' : 'text-slate-700'">
                             <tbody class="divide-y divide-slate-800/50">
-                                <tr @click="showModal = true; selectedIssue = {room: 'CH-1204', desc: 'Chiếu sáng sảnh bị hỏng', status: 'Chờ xử lý', date: '30/12/2025'}"
+                                <tr @click="showModal = true; selectedIssue = {room: 'CH-1204', desc: 'Chiếu sáng sảnh bị hỏng', status: 'Chờ xử lý'}"
                                     class="cursor-pointer hover:bg-blue-500/5">
                                     <td class="p-4 font-bold text-blue-500">CH-1204</td>
                                     <td class="p-4 opacity-80 italic">Chiếu sáng sảnh bị hỏng</td>
@@ -437,7 +444,8 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-8">
                         <template x-for="i in 11">
-                            <div class="stat-card group hover:border-blue-500 transition cursor-pointer">
+                            <div @click="section = 'apartment_detail'; selectedApartment = (1200 + i)"
+                                class="stat-card group hover:border-blue-500 transition cursor-pointer">
                                 <div class="flex justify-between items-start mb-4">
                                     <div>
                                         <h4 class="text-lg font-black dark:text-white" x-text="'CH-' + (1200 + i)"></h4>
@@ -450,15 +458,15 @@
                                 </div>
                                 <div class="space-y-2 mb-4 text-[10px] dark:text-slate-300">
                                     <div class="flex justify-between"><span>Chủ hộ:</span><span class="font-bold">Cư dân
-                                            SCP</span></div>
+                                            VNPT</span></div>
                                     <div class="flex justify-between"><span>Tình trạng:</span><span
                                             :class="i % 3 === 0 ? 'text-red-500' : 'text-emerald-500'"
                                             class="font-bold uppercase"
                                             x-text="i % 3 === 0 ? 'Chưa đóng' : 'Đã đóng'"></span></div>
                                 </div>
                                 <button
-                                    class="w-full py-2 bg-blue-600 text-white text-[9px] font-black uppercase rounded-lg shadow-lg">Quản
-                                    lý chi tiết</button>
+                                    class="w-full py-2 bg-blue-600 text-white text-[9px] font-black uppercase rounded-lg shadow-lg">Chi
+                                    tiết</button>
                             </div>
                         </template>
                         <div
@@ -470,47 +478,58 @@
                     </div>
                 </div>
 
-                <div x-show="section === 'roadmap'" x-transition x-cloak class="space-y-6">
-                    <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-                        <h4 class="font-black text-blue-500 uppercase text-lg italic">Hệ sinh thái SCP - Roadmap Giai
-                            đoạn 1</h4>
+                <div x-show="section === 'apartment_detail'" x-transition x-cloak class="space-y-6">
+                    <div class="flex items-center gap-4 mb-4">
+                        <button @click="section = 'apartment'"
+                            class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-700 transition flex items-center gap-2">
+                            <i class="fas fa-arrow-left"></i> QUAY LẠI
+                        </button>
                     </div>
+                    <div class="stat-card overflow-hidden flex flex-col items-center">
+                        <div class="p-4 w-full border-b border-slate-700 flex justify-between items-center mb-6">
+                            <h4 class="font-black text-blue-500 uppercase text-lg italic">Mặt bằng căn hộ <span
+                                    x-text="selectedApartment"></span></h4>
+                            <span
+                                class="bg-blue-600 text-white text-[10px] px-3 py-1 rounded font-bold uppercase tracking-widest">Loại
+                                A - 85m²</span>
+                        </div>
+                        <div
+                            class="max-w-4xl w-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-800">
+                            <img src="../QuanLyToaNha/images/can_ho.png" alt="Mặt bằng căn hộ"
+                                class="w-full h-auto object-contain">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-8 max-w-4xl">
+                            <div class="stat-card bg-slate-800/30 text-center border-blue-500/20">
+                                <p class="text-[9px] opacity-50 uppercase font-bold dark:text-white">Phòng ngủ</p>
+                                <p class="text-2xl font-black text-blue-400">02</p>
+                            </div>
+                            <div class="stat-card bg-slate-800/30 text-center border-blue-500/20">
+                                <p class="text-[9px] opacity-50 uppercase font-bold dark:text-white">Phòng tắm</p>
+                                <p class="text-2xl font-black text-blue-400">02</p>
+                            </div>
+                            <div class="stat-card bg-slate-800/30 text-center border-blue-500/20">
+                                <p class="text-[9px] opacity-50 uppercase font-bold dark:text-white">Ban công</p>
+                                <p class="text-2xl font-black text-blue-400">Hướng Đông</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="section === 'roadmap'" x-transition x-cloak class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-8">
-                        <div class="stat-card border-blue-500/30 flex flex-col gap-4">
-                            <div class="flex items-center gap-4 text-blue-500"><i
-                                    class="fas fa-mobile-alt text-3xl"></i><span
-                                    class="font-black uppercase text-[11px] dark:text-white">App Cư dân</span></div>
-                            <p class="text-[10px] opacity-60 dark:text-slate-400 leading-relaxed">Ứng dụng đa năng cho
-                                cư dân tòa nhà.</p><span class="text-[8px] font-black text-emerald-500 uppercase">● Đã
-                                triển khai</span>
-                        </div>
-                        <div class="stat-card border-blue-500/30 flex flex-col gap-4">
-                            <div class="flex items-center gap-4 text-emerald-500"><i
-                                    class="fas fa-shield-alt text-3xl"></i><span
-                                    class="font-black uppercase text-[11px] dark:text-white">Hệ thống Security</span>
+                        <template x-for="j in 12">
+                            <div class="stat-card border-blue-500/30 flex flex-col gap-4">
+                                <div class="flex items-center gap-4 text-blue-500"><i
+                                        class="fas fa-microchip text-3xl"></i><span
+                                        class="font-black uppercase text-[11px] dark:text-white"
+                                        x-text="'Module ' + j"></span></div>
+                                <p class="text-[10px] opacity-60 leading-relaxed dark:text-slate-400"
+                                    x-text="'Nội dung công nghệ giai đoạn ' + (j > 8 ? '2' : '1')"></p>
+                                <span :class="j > 8 ? 'text-blue-500' : 'text-emerald-500'"
+                                    class="text-[8px] font-black uppercase tracking-widest"
+                                    x-text="j > 8 ? '○ Giai đoạn 2' : '● Đã hoàn thành'"></span>
                             </div>
-                            <p class="text-[10px] opacity-60 dark:text-slate-400 leading-relaxed">Giám sát và quản lý an
-                                ninh đa tầng.</p><span class="text-[8px] font-black text-emerald-500 uppercase">● Đã
-                                triển khai</span>
-                        </div>
-                        <div class="stat-card border-blue-500/30 flex flex-col gap-4">
-                            <div class="flex items-center gap-4 text-red-500"><i
-                                    class="fas fa-fire-extinguisher text-3xl"></i><span
-                                    class="font-black uppercase text-[11px] dark:text-white">PCCC Thông minh</span>
-                            </div>
-                            <p class="text-[10px] opacity-60 dark:text-slate-400 leading-relaxed">Hệ thống báo cháy tự
-                                động 24/7.</p><span class="text-[8px] font-black text-emerald-500 uppercase">● Đã triển
-                                khai</span>
-                        </div>
-                        <div class="stat-card border-blue-500/30 flex flex-col gap-4">
-                            <div class="flex items-center gap-4 text-purple-500"><i
-                                    class="fas fa-video text-3xl"></i><span
-                                    class="font-black uppercase text-[11px] dark:text-white">Camera AI Vision</span>
-                            </div>
-                            <p class="text-[10px] opacity-60 dark:text-slate-400 leading-relaxed">Nhận diện khuôn mặt và
-                                hành vi.</p><span class="text-[8px] font-black text-emerald-500 uppercase">● Đã triển
-                                khai</span>
-                        </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -531,7 +550,7 @@
                             class="font-bold text-blue-500" x-text="selectedIssue?.status"></span></div>
                 </div>
                 <button @click="showModal = false"
-                    class="w-full mt-6 py-3 bg-blue-600 text-white font-black uppercase text-xs rounded-lg">Đóng</button>
+                    class="w-full mt-6 py-3 bg-blue-600 text-white font-black uppercase text-xs rounded-lg shadow-lg">Đóng</button>
             </div>
         </div>
     </div>
