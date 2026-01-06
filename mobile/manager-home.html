@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{ tab: 'dashboard', darkMode: localStorage.getItem('darkMode') === 'true' }"
+    :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SCP Manager - BMIS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9',
+                            card: '#ffffff',
+                            primary: '#0f172a', // Slate-900
+                            accent: '#3b82f6' // Blue-500
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #f1f5f9;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dark .app-container {
+            background-color: #0f172a;
+        }
+
+        .app-content {
+            padding-bottom: 90px;
+            height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .app-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 80px;
+            z-index: 50;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 15px;
+        }
+
+        .dark .bottom-nav {
+            background: #1e293b;
+            border-top: 1px solid #334155;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: #3b82f6;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+
+        .dark .stat-card {
+            background: #1e293b;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100" x-data="{
+    stats: {
+        revenue: 85,
+        requests: 12,
+        incidents: 3
+    },
+    tasks: [
+        { id: 1, title: 'Duyệt kế hoạch bảo trì PCCC', status: 'pending', time: '10:00 AM' },
+        { id: 2, title: 'Họp giao ban BQL', status: 'done', time: '08:30 AM' },
+        { id: 3, title: 'Kiểm tra vệ sinh sảnh A', status: 'pending', time: '02:00 PM' }
+    ]
+}">
+
+    <div class="app-container transition-colors duration-300">
+
+        <!-- Header -->
+        <header class="p-6 pt-12 bg-slate-900 text-white sticky top-0 z-40">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-xl font-bold border-2 border-white/20">
+                        MN
+                    </div>
+                    <div>
+                        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Trưởng Ban Quản Lý</p>
+                        <h1 class="text-xl font-black leading-none mt-1">Trần Minh Nhật</h1>
+                    </div>
+                </div>
+                <button
+                    class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </div>
+
+            <!-- Header Stats -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white/10 rounded-xl p-3 backdrop-blur-md">
+                    <p class="text-[9px] uppercase font-bold text-slate-400 mb-1">Thu phí T10</p>
+                    <p class="text-xl font-black text-blue-400" x-text="stats.revenue + '%'"></p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-3 backdrop-blur-md">
+                    <p class="text-[9px] uppercase font-bold text-slate-400 mb-1">Yêu cầu mới</p>
+                    <p class="text-xl font-black text-orange-400" x-text="stats.requests"></p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-3 backdrop-blur-md">
+                    <p class="text-[9px] uppercase font-bold text-slate-400 mb-1">Sự cố</p>
+                    <p class="text-xl font-black text-red-500" x-text="stats.incidents"></p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="app-content p-6 space-y-6">
+
+            <!-- Today Tasks -->
+            <div>
+                <div class="flex justify-between items-end mb-4">
+                    <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest opacity-50">
+                        Công việc hôm nay</h3>
+                    <span
+                        class="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded font-bold text-slate-600 dark:text-slate-300">06/11/2026</span>
+                </div>
+
+                <div class="space-y-3">
+                    <template x-for="task in tasks" :key="task.id">
+                        <div class="stat-card p-4 flex items-center gap-4">
+                            <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer"
+                                :class="task.status === 'done' ? 'bg-green-500 border-green-500 text-white' : 'border-slate-300'">
+                                <i x-show="task.status === 'done'" class="fas fa-check text-xs"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-bold text-slate-800 dark:text-white"
+                                    :class="{'line-through opacity-50': task.status === 'done'}" x-text="task.title">
+                                </h4>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase mt-1" x-text="task.time"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Department Status -->
+            <div>
+                <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest opacity-50 mb-4">
+                    Trạng thái bộ phận</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="stat-card p-4 border-l-4 border-l-blue-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <i class="fas fa-user-shield text-blue-500 text-xl"></i>
+                            <span class="text-[10px] font-bold text-white bg-green-500 px-1.5 py-0.5 rounded">Đủ</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">An ninh</p>
+                        <p class="text-lg font-black text-slate-800 dark:text-white">12/12</p>
+                    </div>
+
+                    <div class="stat-card p-4 border-l-4 border-l-orange-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <i class="fas fa-tools text-orange-500 text-xl"></i>
+                            <span class="text-[10px] font-bold text-white bg-green-500 px-1.5 py-0.5 rounded">Đủ</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Kỹ thuật</p>
+                        <p class="text-lg font-black text-slate-800 dark:text-white">08/08</p>
+                    </div>
+
+                    <div class="stat-card p-4 border-l-4 border-l-emerald-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <i class="fas fa-broom text-emerald-500 text-xl"></i>
+                            <span class="text-[10px] font-bold text-white bg-yellow-500 px-1.5 py-0.5 rounded">Vắng
+                                1</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Vệ sinh</p>
+                        <p class="text-lg font-black text-slate-800 dark:text-white">15/16</p>
+                    </div>
+
+                    <div class="stat-card p-4 border-l-4 border-l-purple-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <i class="fas fa-concierge-bell text-purple-500 text-xl"></i>
+                            <span class="text-[10px] font-bold text-white bg-green-500 px-1.5 py-0.5 rounded">Đủ</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Lễ tân</p>
+                        <p class="text-lg font-black text-slate-800 dark:text-white">03/03</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-2 gap-4">
+                <button
+                    class="bg-blue-600 text-white rounded-xl py-4 font-bold shadow-lg shadow-blue-200 active:scale-95 transition-transform">
+                    <i class="fas fa-plus-circle mb-2 text-xl"></i><br>
+                    Tạo Thông Báo
+                </button>
+                <button
+                    class="bg-slate-800 text-white rounded-xl py-4 font-bold shadow-lg shadow-slate-300 active:scale-95 transition-transform">
+                    <i class="fas fa-comments mb-2 text-xl"></i><br>
+                    Phản hồi Cư dân
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-chart-pie text-xl"></i>
+                <span class="text-[9px] font-bold uppercase">Tổng quan</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-tasks text-xl"></i>
+                <span class="text-[9px] font-bold uppercase">Công việc</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-users text-xl"></i>
+                <span class="text-[9px] font-bold uppercase">Nhân sự</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-[9px] font-bold uppercase">Cài đặt</span>
+            </a>
+        </nav>
+
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+<!-- ============================================
+     Header Component
+     Shared header for all pages
+     ============================================ -->
+
+<header class="main-header shadow-sm">
+    <div>
+        <h2 class="text-[10px] text-teal-600 font-bold uppercase tracking-widest">Cơ sở: Bệnh viện Quốc tế SCP</h2>
+        <h3 class="text-2xl font-black uppercase tracking-tight transition-colors"
+            :class="darkMode ? 'text-white' : 'text-slate-800'" x-text="pageTitle || 'TRUNG TÂM ĐIỀU HÀNH HMIS'"></h3>
+    </div>
+    <div class="text-right">
+        <p class="text-[9px] opacity-50 uppercase font-bold transition-colors"
+            :class="darkMode ? 'text-white' : 'text-slate-900'">Tiêu thụ năng lượng</p>
+        <p class="text-xl font-black text-teal-600 tracking-tighter" x-text="liveKwh + ' kWh'"></p>
+    </div>
+</header>

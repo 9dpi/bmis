@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    mobileMenu: false,
+    apartmentApp: apartmentApp()
+}" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP BMIS - Sơ đồ Căn hộ</title>
+
+    <!-- ANTI-FLICKER SCRIPT -->
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '480px' },
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9', card: '#ffffff',
+                            primary: '#2563eb', accent: '#3b82f6',
+                            text: '#0f172a', muted: '#64748b'
+                        }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.98)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        function apartmentApp() {
+            return {
+                darkMode: false,
+                currentBlock: 'A',
+                currentFloor: 12,
+                apartments: [],
+                floors: Array.from({ length: 35 }, (_, i) => i + 1),
+                selectedApartment: null,
+
+                init() {
+                    this.loadFloorData();
+                },
+
+                loadFloorData() {
+                    // Generate mock data for the current floor
+                    const apts = [];
+                    const roomsPerFloor = 14;
+                    for (let i = 1; i <= roomsPerFloor; i++) {
+                        const roomNum = (i < 10 ? '0' + i : i);
+                        const aptCode = `${this.currentBlock}-${this.currentFloor}${roomNum}`;
+
+                        // Random status
+                        const rand = Math.random();
+                        let status = 'owner';
+                        if (rand > 0.8) status = 'vacant';
+                        else if (rand > 0.6) status = 'rented';
+                        else if (rand > 0.95) status = 'pending';
+
+                        apts.push({
+                            id: aptCode,
+                            code: `${this.currentFloor}${roomNum}`,
+                            area: [68, 85, 92, 110, 135][Math.floor(Math.random() * 5)],
+                            bedrooms: [2, 2, 3, 3, 4][Math.floor(Math.random() * 5)],
+                            status: status,
+                            owner: status === 'vacant' ? 'Chưa bán' : (status === 'rented' ? 'Nguyễn Văn Chủ (Cho thuê)' : 'Trần Văn Cư Dân'),
+                            residents: status === 'vacant' ? 0 : Math.floor(Math.random() * 4) + 1,
+                            feeStatus: Math.random() > 0.1 ? 'paid' : 'unpaid'
+                        });
+                    }
+                    this.apartments = apts;
+                },
+
+                // Stats for Current Floor
+                get occupiedCount() { return this.apartments.filter(a => a.status === 'owner').length; },
+                get rentedCount() { return this.apartments.filter(a => a.status === 'rented').length; },
+                get vacantCount() { return this.apartments.filter(a => a.status === 'vacant').length; },
+
+                selectApartment(apt) {
+                    this.selectedApartment = apt;
+                }
+            }
+        }
+    </script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" class="overflow-hidden" x-data="apartmentApp">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-cloak
+        class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+        @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar transition-transform duration-300 z-[70]" :class="{ 'mobile-open': mobileMenu }">
+
+            <div class="logo-frame flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <i class="fas fa-city text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-slate-900 leading-none dark:text-white">SCP
+                            BMIS</h1>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Smart Building
+                        </p>
+                    </div>
+                </div>
+                <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-blue-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-grow py-6 overflow-y-auto custom-scroll space-y-1">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="../index.html" class="nav-link flex items-center">
+                    <i class="fas fa-city"></i> BMIS
+                </a>
+                <a href="facility.html" class="nav-link flex items-center">
+                    <i class="fas fa-tools"></i> Bảo trì Kỹ thuật
+                </a>
+                <a href="audit.html" class="nav-link flex items-center">
+                    <i class="fas fa-clipboard-check"></i> Tiêu chuẩn Vận hành
+                </a>
+                <a href="../show-app.html" target="_blank" class="nav-link flex items-center group">
+                    <i class="fas fa-mobile-alt"></i> App Mobile cư dân
+                    <i
+                        class="fas fa-external-link-alt text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity text-slate-400"></i>
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cư dân & Căn
+                    hộ</div>
+
+                <a href="residents.html" class="nav-link flex items-center">
+                    <i class="fas fa-users"></i> Danh sách cư dân
+                </a>
+                <a href="apartment-map.html" class="nav-link active flex items-center">
+                    <i class="fas fa-map"></i> Sơ đồ căn hộ
+                </a>
+                <a href="requests.html" class="nav-link flex items-center">
+                    <i class="fas fa-comment-dots"></i> Yêu cầu & Phản ánh
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dịch vụ & Tài
+                    chính</div>
+
+                <a href="services.html" class="nav-link flex items-center">
+                    <i class="fas fa-concierge-bell"></i> Dịch vụ tiện ích
+                </a>
+                <a href="billing.html" class="nav-link flex items-center">
+                    <i class="fas fa-file-invoice-dollar"></i> Phí quản lý & Nước
+                </a>
+                <a href="equipment.html" class="nav-link flex items-center">
+                    <i class="fas fa-server"></i> Hệ thống kỹ thuật
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">An ninh & Vệ
+                    sinh</div>
+
+                <a href="staff.html" class="nav-link flex items-center">
+                    <i class="fas fa-user-tie"></i> Nhân sự BQL
+                </a>
+                <a href="housekeeping.html" class="nav-link flex items-center">
+                    <i class="fas fa-broom"></i> Vệ sinh & Cảnh quan
+                </a>
+                <a href="security.html" class="nav-link flex items-center">
+                    <i class="fas fa-shield-alt"></i> An ninh bảo vệ
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-slate-100 flex items-center justify-between bg-white mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Online</span>
+                </div>
+                <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container bg-slate-50">
+            <header
+                class="main-header bg-white border-b border-slate-200 h-[80px] px-8 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileMenu = true"
+                        class="lg:hidden p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Trung tâm Chỉ huy SCP
+                        </h2>
+                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">SƠ ĐỒ MẶT
+                            BẰNG CĂN HỘ</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-right">
+                    <div class="hidden xs:block">
+                        <p class="text-[9px] opacity-50 uppercase font-bold text-slate-500">Tổng quan</p>
+                        <p class="text-sm md:text-xl font-black text-blue-600 tracking-tighter">2 Tòa / 35 Tầng</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll animate-fade-in">
+                <div class="space-y-6">
+                    <!-- Stats Cards (Current Floor) -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <div class="stat-card border-blue-500/20 bg-blue-50/50 dark:bg-blue-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Cư dân
+                                        (Tầng <span x-text="currentFloor"></span>)</p>
+                                    <p class="text-2xl font-black text-blue-600" x-text="occupiedCount"></p>
+                                </div>
+                                <i class="fas fa-user-check text-3xl text-blue-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-orange-500/20 bg-orange-50/50 dark:bg-orange-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Cho
+                                        thuê</p>
+                                    <p class="text-2xl font-black text-orange-600" x-text="rentedCount"></p>
+                                </div>
+                                <i class="fas fa-key text-3xl text-orange-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Trống
+                                    </p>
+                                    <p class="text-2xl font-black text-emerald-600" x-text="vacantCount"></p>
+                                </div>
+                                <i class="fas fa-door-open text-3xl text-emerald-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-purple-500/20 bg-purple-50/50 dark:bg-purple-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Tỷ lệ
+                                        Lấp đầy</p>
+                                    <p class="text-2xl font-black text-purple-600"
+                                        x-text="Math.round(((occupiedCount + rentedCount) / apartments.length)*100) + '%'">
+                                    </p>
+                                </div>
+                                <i class="fas fa-chart-pie text-3xl text-purple-500/30"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floor Selector & Filter -->
+                    <div class="stat-card">
+                        <div class="flex flex-col sm:flex-row gap-4 items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-500 uppercase">Chọn Tòa:</span>
+                                <div class="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+                                    <button @click="currentBlock = 'A'; loadFloorData()"
+                                        class="px-4 py-2 rounded-md text-xs font-black transition-all"
+                                        :class="currentBlock === 'A' ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'">Tòa
+                                        A</button>
+                                    <button @click="currentBlock = 'B'; loadFloorData()"
+                                        class="px-4 py-2 rounded-md text-xs font-black transition-all"
+                                        :class="currentBlock === 'B' ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'">Tòa
+                                        B</button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 flex-grow">
+                                <span class="text-xs font-bold text-slate-500 uppercase">Chọn Tầng:</span>
+                                <select x-model="currentFloor" @change="loadFloorData()"
+                                    class="flex-grow px-4 py-2 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-bold outline-none focus:border-blue-500 text-slate-800 dark:text-white">
+                                    <template x-for="f in floors">
+                                        <option :value="f" x-text="'Tầng ' + f"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Apartment Grid -->
+                    <div class="mb-4">
+                        <h3 class="text-sm font-black uppercase text-slate-500 mb-3"
+                            x-text="'Mặt bằng Tầng ' + currentFloor + ' - Tòa ' + currentBlock"></h3>
+                        <div
+                            class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-4">
+                            <template x-for="apt in apartments" :key="apt.id">
+                                <div @click="selectApartment(apt)"
+                                    class="stat-card cursor-pointer hover:scale-105 transition-all p-4 text-center relative overflow-hidden group"
+                                    :class="{
+                                        'border-blue-500 bg-blue-50 dark:bg-blue-900/20': apt.status === 'owner',
+                                        'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20': apt.status === 'vacant',
+                                        'border-orange-500 bg-orange-50 dark:bg-orange-900/20': apt.status === 'rented',
+                                        'border-slate-300 bg-slate-50 dark:bg-slate-800': apt.status === 'pending'
+                                     }">
+
+                                    <!-- Status Indicator Dot -->
+                                    <div class="absolute top-2 right-2 w-2 h-2 rounded-full" :class="{
+                                            'bg-blue-500': apt.status === 'owner',
+                                            'bg-emerald-500': apt.status === 'vacant',
+                                            'bg-orange-500': apt.status === 'rented',
+                                            'bg-slate-400': apt.status === 'pending'
+                                        }"></div>
+
+                                    <div class="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center text-white text-lg shadow-sm"
+                                        :class="{
+                                            'bg-blue-500': apt.status === 'owner',
+                                            'bg-emerald-500': apt.status === 'vacant',
+                                            'bg-orange-500': apt.status === 'rented',
+                                            'bg-slate-400': apt.status === 'pending'
+                                         }">
+                                        <i class="fas" :class="apt.status === 'vacant' ? 'fa-key' : 'fa-home'"></i>
+                                    </div>
+
+                                    <p class="text-sm font-black mb-0.5"
+                                        :class="darkMode ? 'text-white' : 'text-slate-800'" x-text="apt.code"></p>
+                                    <p class="text-[9px] font-bold text-slate-500 uppercase"
+                                        x-text="apt.bedrooms + ' PN • ' + apt.area + 'm²'"></p>
+
+                                    <!-- Fee Alert -->
+                                    <template x-if="apt.feeStatus === 'unpaid' && apt.status !== 'vacant'">
+                                        <div
+                                            class="absolute top-0 left-0 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-br-lg">
+                                            NỢ PHÍ
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Apartment Detail Modal -->
+    <div x-show="selectedApartment" x-cloak @click.away="selectedApartment = null"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div @click.stop
+            class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-fade-in">
+            <div class="p-6 bg-gradient-to-r text-white flex justify-between items-center" :class="{
+                    'from-blue-600 to-blue-800': selectedApartment?.status === 'owner',
+                    'from-emerald-500 to-emerald-700': selectedApartment?.status === 'vacant',
+                    'from-orange-500 to-orange-700': selectedApartment?.status === 'rented',
+                    'from-slate-500 to-slate-700': selectedApartment?.status === 'pending'
+                }">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center text-2xl">
+                        <i class="fas" :class="selectedApartment?.status === 'vacant' ? 'fa-key' : 'fa-home'"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black" x-text="selectedApartment?.id"></h3>
+                        <p class="text-xs uppercase font-bold opacity-80"
+                            x-text="'Căn hộ ' + selectedApartment?.bedrooms + ' Phòng ngủ'"></p>
+                    </div>
+                </div>
+                <button @click="selectedApartment = null" class="text-white/80 hover:text-white text-2xl"><i
+                        class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div
+                        class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 text-center">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">Diện tích</p>
+                        <p class="text-lg font-black text-slate-800 dark:text-white"
+                            x-text="selectedApartment?.area + ' m²'"></p>
+                    </div>
+                    <div
+                        class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 text-center">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">Trạng thái</p>
+                        <p class="text-lg font-black capitalize" :class="{
+                                'text-blue-600': selectedApartment?.status === 'owner',
+                                'text-emerald-600': selectedApartment?.status === 'vacant',
+                                'text-orange-600': selectedApartment?.status === 'rented',
+                                'text-slate-500': selectedApartment?.status === 'pending'
+                            }"
+                            x-text="selectedApartment?.status === 'vacant' ? 'Chưa có chủ' : (selectedApartment?.status === 'rented' ? 'Đang Cho Thuê' : 'Chủ Căn Hộ')">
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Resident Info -->
+                <div
+                    class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-200 pb-2">Thông tin
+                        sở hữu</h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Chủ sở hữu:</span>
+                            <span class="text-sm font-black text-slate-900 dark:text-white"
+                                x-text="selectedApartment?.owner"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Số nhân khẩu:</span>
+                            <span class="text-sm font-bold text-slate-800 dark:text-white"
+                                x-text="selectedApartment?.residents + ' người'"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Trạng thái phí:</span>
+                            <span class="px-2 py-1 rounded text-[10px] font-black uppercase"
+                                :class="selectedApartment?.feeStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                                x-text="selectedApartment?.feeStatus === 'paid' ? 'Đã Thanh Toán' : 'Chưa Thanh Toán'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <template x-if="selectedApartment?.status !== 'vacant'">
+                        <button
+                            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-black uppercase text-xs hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                            <i class="fas fa-users mr-2"></i>Xem Cư Dân
+                        </button>
+                    </template>
+                    <template x-if="selectedApartment?.status === 'vacant'">
+                        <button
+                            class="flex-1 py-3 bg-emerald-600 text-white rounded-lg font-black uppercase text-xs hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200">
+                            <i class="fas fa-file-contract mr-2"></i>Tạo Hợp đồng
+                        </button>
+                    </template>
+                    <button
+                        class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-lg font-black uppercase text-xs hover:bg-slate-200 transition-colors">
+                        <i class="fas fa-history mr-2"></i>Lịch sử
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

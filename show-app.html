@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{ darkMode: false }" :class="{ 'dark': darkMode }">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SCP HMIS - App Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .phone-case {
+            width: 375px;
+            height: clamp(667px, 90vh, 812px);
+            border: 12px solid #1e293b;
+            border-radius: 55px;
+            position: relative;
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.4);
+            background: #fff;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 480px) {
+            .phone-case {
+                width: 100vw;
+                height: 100vh;
+                border: none;
+                border-radius: 0;
+            }
+
+            .notch {
+                display: none;
+            }
+
+            body {
+                background: white;
+            }
+        }
+
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 28px;
+            background: #1e293b;
+            border-bottom-left-radius: 18px;
+            border-bottom-right-radius: 18px;
+            z-index: 100;
+        }
+
+        .app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+            scrollbar-width: none;
+        }
+
+        .app-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .app-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .app-card:active {
+            transform: scale(0.9);
+        }
+
+        .app-icon-inner {
+            width: 64px;
+            height: 64px;
+            border-radius: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body :class="darkMode ? 'dark bg-slate-900' : 'bg-slate-200'">
+    <div class="phone-case" :class="darkMode ? 'border-slate-800' : 'border-slate-900'">
+        <div class="notch"></div>
+        <div class="app-container transition-colors duration-300" :class="darkMode ? 'bg-[#030712]' : 'bg-slate-50'">
+            <header class="p-6 pt-12 border-b flex justify-between items-center"
+                :class="darkMode ? 'bg-[#030712]/80 border-slate-800' : 'bg-white/80 border-slate-100'">
+                <div>
+                    <h2 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Ecosystem</h2>
+                    <h1 class="text-xl font-black italic tracking-tighter text-slate-800 dark:text-white">SCP BMIS <span
+                            class="text-blue-600">HUB</span></h1>
+                </div>
+                <button @click="darkMode = !darkMode"
+                    class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-amber-500 transition-transform active:scale-90">
+                    <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
+                </button>
+            </header>
+
+            <div class="app-content p-6 flex flex-col justify-center">
+                <div class="grid grid-cols-2 gap-6 mb-10">
+                    <a href="mobile/resident-home.html" target="_blank" class="app-card">
+                        <div class="app-icon-inner bg-blue-500 text-3xl"><i class="fas fa-home"></i></div>
+                        <span class="text-xs font-bold text-center dark:text-slate-400 text-slate-800 uppercase">Cư dân
+                            (Resident)</span>
+                    </a>
+                    <a href="mobile/manager-home.html" target="_blank" class="app-card">
+                        <div class="app-icon-inner bg-slate-800 text-3xl"><i class="fas fa-user-tie"></i></div>
+                        <span class="text-xs font-bold text-center dark:text-slate-400 text-slate-800 uppercase">Quản lý
+                            (BQL)</span>
+                    </a>
+                    <a href="mobile/technician-home.html" target="_blank" class="app-card">
+                        <div class="app-icon-inner bg-orange-600 text-3xl"><i class="fas fa-tools"></i></div>
+                        <span class="text-xs font-bold text-center dark:text-slate-400 text-slate-800 uppercase">Kỹ
+                            thuật (Tech)</span>
+                    </a>
+                    <a href="mobile/security-guard.html" target="_blank" class="app-card">
+                        <div class="app-icon-inner bg-indigo-900 text-3xl"><i class="fas fa-shield-alt"></i></div>
+                        <span class="text-xs font-bold text-center dark:text-slate-400 text-slate-800 uppercase">An ninh
+                            (Guard)</span>
+                    </a>
+                    <a href="mobile/housekeeper-home.html" target="_blank" class="app-card col-span-2 w-1/2 mx-auto">
+                        <div class="app-icon-inner bg-green-600 text-3xl"><i class="fas fa-broom"></i></div>
+                        <span class="text-xs font-bold text-center dark:text-slate-400 text-slate-800 uppercase">Vệ sinh
+                            (HK)</span>
+                    </a>
+                </div>
+
+                <div class="px-2 space-y-4 border-t pt-6" :class="darkMode ? 'border-slate-800' : 'border-slate-100'">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-blue-600">Hệ sinh thái Tòa nhà Thông
+                        minh</h3>
+
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-blue-500 text-sm mt-0.5"></i>
+                            <span class="text-xs font-medium" :class="darkMode ? 'text-slate-300' : 'text-slate-700'">Cư
+                                dân kết nối trực tiếp với BQL.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-blue-500 text-sm mt-0.5"></i>
+                            <span class="text-xs font-medium"
+                                :class="darkMode ? 'text-slate-300' : 'text-slate-700'">Điều hành kỹ thuật & an ninh
+                                thời gian thực.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-blue-500 text-sm mt-0.5"></i>
+                            <span class="text-xs font-medium"
+                                :class="darkMode ? 'text-slate-300' : 'text-slate-700'">Thanh toán & Đặt dịch vụ một
+                                chạm.</span>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="h-1.5 w-32 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2"></div>
+        </div>
+    </div>
+</body>
+
+</html>

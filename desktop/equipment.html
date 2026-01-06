@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    mobileMenu: false,
+    techApp: techApp()
+}" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP BMIS - Hệ thống Kỹ thuật</title>
+
+    <!-- ANTI-FLICKER SCRIPT -->
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '480px' },
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9', card: '#ffffff',
+                            primary: '#2563eb', accent: '#3b82f6',
+                            text: '#0f172a', muted: '#64748b'
+                        }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.98)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        function techApp() {
+            return {
+                systems: [],
+                searchQuery: '',
+                filterType: 'all',
+                selectedSystem: null,
+
+                init() {
+                    // Mock Technical Systems Data
+                    this.systems = [
+                        { id: 'ELV-01', name: 'Thang máy P1', type: 'Elevator', location: 'Sảnh A', lastMaint: '2026-01-02', nextMaint: '2026-02-02', status: 'Running', health: 98, specs: { load: '0kg', brand: 'Schindler', speed: '2.5m/s' }, image: 'https://images.unsplash.com/photo-1546700880-928923a1ee5d?auto=format&fit=crop&w=400&q=80' },
+                        { id: 'ELV-02', name: 'Thang máy P2', type: 'Elevator', location: 'Sảnh A', lastMaint: '2026-01-02', nextMaint: '2026-02-02', status: 'Running', health: 96, specs: { load: '450kg', brand: 'Schindler', speed: '2.5m/s' }, image: 'https://images.unsplash.com/photo-1546700880-928923a1ee5d?auto=format&fit=crop&w=400&q=80' },
+                        { id: 'PUMP-01', name: 'Bơm tăng áp 1', type: 'Pump', location: 'Tầng Mái', lastMaint: '2025-12-28', nextMaint: '2026-01-28', status: 'Standby', health: 100, specs: { pressure: '4.5 Bar', flow: '0m3/h' }, image: 'https://images.unsplash.com/photo-1574359416568-16ef784d127d?auto=format&fit=crop&w=400&q=80' },
+                        { id: 'PUMP-02', name: 'Bơm tăng áp 2', type: 'Pump', location: 'Tầng Mái', lastMaint: '2025-12-28', nextMaint: '2026-01-28', status: 'Running', health: 92, specs: { pressure: '6.2 Bar', flow: '45m3/h' }, image: 'https://images.unsplash.com/photo-1574359416568-16ef784d127d?auto=format&fit=crop&w=400&q=80' },
+                        { id: 'GEN-01', name: 'Máy phát điện 1', type: 'Generator', location: 'Hầm B2', lastMaint: '2025-11-15', nextMaint: '2026-05-15', status: 'Standby', health: 99, specs: { power: '2000kVA', fuel: '98%' }, image: 'https://images.unsplash.com/photo-1495573470717-380d92257d09?auto=format&fit=crop&w=400&q=80' },
+                        { id: 'HVAC-01', name: 'Chiller 1', type: 'HVAC', location: 'Hầm B1', lastMaint: '2025-12-20', nextMaint: '2026-06-20', status: 'Running', health: 88, specs: { tempOut: '7°C', tempIn: '12°C' }, image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=400&q=80' },
+                        { id: 'FIRE-01', name: 'Tủ Báo cháy Center', type: 'Fire', location: 'Phòng FCC', lastMaint: '2026-01-05', nextMaint: '2026-02-05', status: 'Alert', health: 85, specs: { zones: '120', active: '1' }, image: 'https://images.unsplash.com/photo-1615818451556-32d8816c4f74?auto=format&fit=crop&w=400&q=80' },
+                        { id: 'CCTV-MAIN', name: 'Server Camera', type: 'Security', location: 'Phòng Server', lastMaint: '2025-10-10', nextMaint: '2026-04-10', status: 'Running', health: 95, specs: { hdd: '85%', cameras: '256' }, image: 'https://images.unsplash.com/photo-1558494949-ef2bb6db879d?auto=format&fit=crop&w=400&q=80' }
+                    ];
+                },
+
+                get runningCount() { return this.systems.filter(s => s.status === 'Running').length; },
+                get alertCount() { return this.systems.filter(s => s.status === 'Alert' || s.status === 'Fault').length; },
+
+                get filteredSystems() {
+                    return this.systems.filter(s => {
+                        const matchSearch = this.searchQuery === '' || s.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        const matchType = this.filterType === 'all' || s.type === this.filterType;
+                        return matchSearch && matchType;
+                    });
+                }
+            }
+        }
+    </script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" class="overflow-hidden" x-data="techApp">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-cloak
+        class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+        @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar transition-transform duration-300 z-[70]" :class="{ 'mobile-open': mobileMenu }">
+
+            <div class="logo-frame flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <i class="fas fa-city text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-slate-900 leading-none dark:text-white">SCP
+                            BMIS</h1>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Smart Building
+                        </p>
+                    </div>
+                </div>
+                <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-blue-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-grow py-6 overflow-y-auto custom-scroll space-y-1">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="../index.html" class="nav-link flex items-center">
+                    <i class="fas fa-city"></i> BMIS
+                </a>
+                <a href="facility.html" class="nav-link flex items-center">
+                    <i class="fas fa-tools"></i> Bảo trì Kỹ thuật
+                </a>
+                <a href="audit.html" class="nav-link flex items-center">
+                    <i class="fas fa-clipboard-check"></i> Tiêu chuẩn Vận hành
+                </a>
+                <a href="../show-app.html" target="_blank" class="nav-link flex items-center group">
+                    <i class="fas fa-mobile-alt"></i> App Mobile cư dân
+                    <i
+                        class="fas fa-external-link-alt text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity text-slate-400"></i>
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cư dân & Căn
+                    hộ</div>
+
+                <a href="residents.html" class="nav-link flex items-center">
+                    <i class="fas fa-users"></i> Danh sách cư dân
+                </a>
+                <a href="apartment-map.html" class="nav-link flex items-center">
+                    <i class="fas fa-map"></i> Sơ đồ căn hộ
+                </a>
+                <a href="requests.html" class="nav-link flex items-center">
+                    <i class="fas fa-comment-dots"></i> Yêu cầu & Phản ánh
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dịch vụ & Tài
+                    chính</div>
+
+                <a href="services.html" class="nav-link flex items-center">
+                    <i class="fas fa-concierge-bell"></i> Dịch vụ tiện ích
+                </a>
+                <a href="billing.html" class="nav-link flex items-center">
+                    <i class="fas fa-file-invoice-dollar"></i> Phí quản lý & Nước
+                </a>
+                <a href="equipment.html" class="nav-link active flex items-center">
+                    <i class="fas fa-server"></i> Hệ thống kỹ thuật
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">An ninh & Vệ
+                    sinh</div>
+
+                <a href="staff.html" class="nav-link flex items-center">
+                    <i class="fas fa-user-tie"></i> Nhân sự BQL
+                </a>
+                <a href="housekeeping.html" class="nav-link flex items-center">
+                    <i class="fas fa-broom"></i> Vệ sinh & Cảnh quan
+                </a>
+                <a href="security.html" class="nav-link flex items-center">
+                    <i class="fas fa-shield-alt"></i> An ninh bảo vệ
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-slate-100 flex items-center justify-between bg-white mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Online</span>
+                </div>
+                <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container bg-slate-50">
+            <header
+                class="main-header bg-white border-b border-slate-200 h-[80px] px-8 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileMenu = true"
+                        class="lg:hidden p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Trung tâm Chỉ huy SCP
+                        </h2>
+                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">HỆ THỐNG KỸ
+                            THUẬT</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-right">
+                    <div class="hidden xs:block">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Trạng thái Toàn hệ thống</p>
+                        <p class="text-sm md:text-xl font-black text-blue-600 tracking-tighter"
+                            x-text="runningCount + '/' + systems.length + ' ONLINE'"></p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll animate-fade-in">
+                <div class="space-y-6">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <div class="stat-card border-green-500/20 bg-green-50/50 dark:bg-green-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Hoạt
+                                        động ổn định</p>
+                                    <p class="text-2xl font-black text-green-600" x-text="runningCount"></p>
+                                </div>
+                                <i class="fas fa-server text-3xl text-green-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-red-500/20 bg-red-50/50 dark:bg-red-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Cảnh
+                                        báo/Lỗi</p>
+                                    <p class="text-2xl font-black text-red-600" x-text="alertCount"></p>
+                                </div>
+                                <i class="fas fa-exclamation-triangle text-3xl text-red-500/30 animate-pulse"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-blue-500/20 bg-blue-50/50 dark:bg-blue-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Hiệu
+                                        suất</p>
+                                    <p class="text-2xl font-black text-blue-600">92%</p>
+                                </div>
+                                <i class="fas fa-tachometer-alt text-3xl text-blue-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-yellow-500/20 bg-yellow-50/50 dark:bg-yellow-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Đến hạn
+                                        Bảo trì</p>
+                                    <p class="text-2xl font-black text-yellow-600">3</p>
+                                </div>
+                                <i class="fas fa-wrench text-3xl text-yellow-500/30"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Search -->
+                    <div class="stat-card">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" x-model="searchQuery" placeholder="Tìm hệ thống..."
+                                    class="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-medium outline-none focus:border-blue-500"
+                                    :class="darkMode ? 'text-white' : 'text-slate-800'">
+                            </div>
+                            <select x-model="filterType"
+                                class="px-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-bold outline-none focus:border-blue-500"
+                                :class="darkMode ? 'text-white' : 'text-slate-800'">
+                                <option value="all">Tất cả hệ thống</option>
+                                <option value="Elevator">Thang máy</option>
+                                <option value="Pump">Hệ thống Nước</option>
+                                <option value="Generator">Điện & MFĐ</option>
+                                <option value="HVAC">Điều hòa & Thông gió</option>
+                                <option value="Fire">PCCC</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- System Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <template x-for="sys in filteredSystems" :key="sys.id">
+                            <div @click="selectedSystem = sys"
+                                class="stat-card cursor-pointer hover:border-blue-500 transition-all p-0 overflow-hidden relative"
+                                :class="{
+                                    'border-l-4 border-l-red-500': sys.status === 'Alert' || sys.status === 'Fault',
+                                    'border-l-4 border-l-green-500': sys.status === 'Running',
+                                    'border-l-4 border-l-yellow-500': sys.status === 'Standby'
+                                }">
+                                <div
+                                    class="bg-slate-50 dark:bg-slate-800/50 p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+                                            :class="{
+                                                'bg-blue-500': sys.type === 'Elevator',
+                                                'bg-teal-500': sys.type === 'Pump',
+                                                'bg-orange-500': sys.type === 'Generator',
+                                                'bg-purple-500': sys.type === 'HVAC',
+                                                'bg-red-500': sys.type === 'Fire',
+                                                'bg-slate-500': sys.type === 'Security'
+                                            }">
+                                            <i class="fas" :class="{
+                                                'fa-arrow-up': sys.type === 'Elevator',
+                                                'fa-tint': sys.type === 'Pump',
+                                                'fa-bolt': sys.type === 'Generator',
+                                                'fa-fan': sys.type === 'HVAC',
+                                                'fa-fire-extinguisher': sys.type === 'Fire',
+                                                'fa-video': sys.type === 'Security'
+                                            }"></i>
+                                        </div>
+                                        <h4 class="font-bold text-sm"
+                                            :class="darkMode ? 'text-white' : 'text-slate-800'" x-text="sys.name"></h4>
+                                    </div>
+                                    <div class="w-2 h-2 rounded-full animate-pulse" :class="{
+                                            'bg-green-500': sys.status === 'Running',
+                                            'bg-red-500': sys.status === 'Alert' || sys.status === 'Fault',
+                                            'bg-yellow-500': sys.status === 'Standby'
+                                        }"></div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-slate-400 font-bold uppercase">Trạng thái</span>
+                                        <span class="font-black" :class="{
+                                                'text-green-600': sys.status === 'Running',
+                                                'text-red-600': sys.status === 'Alert' || sys.status === 'Fault',
+                                                'text-yellow-600': sys.status === 'Standby'
+                                            }"
+                                            x-text="sys.status === 'Running' ? 'Đang chạy' : (sys.status === 'Standby' ? 'Chế độ chờ' : 'CẢNH BÁO')"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-slate-400 font-bold uppercase">Sức khỏe</span>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div class="h-full rounded-full"
+                                                    :class="sys.health > 90 ? 'bg-green-500' : (sys.health > 70 ? 'bg-yellow-500' : 'bg-red-500')"
+                                                    :style="'width: ' + sys.health + '%'"></div>
+                                            </div>
+                                            <span class="font-bold text-slate-600 dark:text-slate-400"
+                                                x-text="sys.health + '%'"></span>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex justify-between items-center text-xs pt-2 border-t border-slate-100 dark:border-slate-800">
+                                        <span class="text-slate-400 font-bold uppercase">Bảo trì kế tiếp</span>
+                                        <span class="font-bold text-blue-600" x-text="sys.nextMaint"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tech Detail Modal -->
+    <div x-show="selectedSystem" x-cloak @click.away="selectedSystem = null"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div @click.stop
+            class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-fade-in">
+            <div class="h-40 relative">
+                <img :src="selectedSystem?.image" class="w-full h-full object-cover">
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
+                    <button @click="selectedSystem = null"
+                        class="absolute top-4 right-4 text-white hover:scale-110 transition-transform bg-black/20 p-2 rounded-full backdrop-blur-sm"><i
+                            class="fas fa-times"></i></button>
+                    <div>
+                        <h3 class="text-xl font-black text-white" x-text="selectedSystem?.name"></h3>
+                        <p class="text-white/80 text-xs font-bold uppercase"
+                            x-text="'Mã: ' + selectedSystem?.id + ' • ' + selectedSystem?.location"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Live Params -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">Thông số vận hành hiện tại</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <template x-for="(val, key) in selectedSystem?.specs">
+                            <div
+                                class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 text-center">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1" x-text="key"></p>
+                                <p class="text-lg font-black text-slate-800 dark:text-white" x-text="val"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Maintenance Info -->
+                <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-slate-500">Bảo trì gần nhất</span>
+                        <span class="text-xs font-black text-slate-800 dark:text-white"
+                            x-text="selectedSystem?.lastMaint"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-500">Kế hoạch tiếp theo</span>
+                        <span class="text-xs font-black text-blue-600" x-text="selectedSystem?.nextMaint"></span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <button
+                        class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-black uppercase text-xs hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                        <i class="fas fa-clipboard-list mr-2"></i>Nhật ký
+                    </button>
+                    <button
+                        class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-lg font-black uppercase text-xs hover:bg-slate-200 transition-colors">
+                        <i class="fas fa-tools mr-2"></i>Báo cáo sự cố
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

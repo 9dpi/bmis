@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    mobileMenu: false,
+    billingApp: billingApp()
+}" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP BMIS - Phí & Thanh toán</title>
+
+    <!-- ANTI-FLICKER SCRIPT -->
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '480px' },
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9', card: '#ffffff',
+                            primary: '#2563eb', accent: '#3b82f6',
+                            text: '#0f172a', muted: '#64748b'
+                        }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.98)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        function billingApp() {
+            return {
+                bills: [],
+                searchQuery: '',
+                filterStatus: 'all',
+                selectedBill: null,
+
+                init() {
+                    // Mock Billing Data
+                    this.bills = [
+                        {
+                            id: 'HD-0126-A1205', room: 'A-1205', owner: 'Nguyễn Văn A', period: '01/2026', amount: 1850000, status: 'paid', date: '2026-01-05', items: [
+                                { name: 'Phí Quản lý', detail: '85m2 x 12.000đ', value: 1020000 },
+                                { name: 'Phí Gửi xe', detail: '1 Ô tô, 2 Xe máy', value: 1500000 - 1020000 + 350000 } // Mock logic fix
+                            ]
+                        },
+                        {
+                            id: 'HD-0126-B0812', room: 'B-0812', owner: 'Trần Thị B', period: '01/2026', amount: 3250000, status: 'unpaid', date: '---', items: [
+                                { name: 'Phí Quản lý', detail: '110m2 x 12.000đ', value: 1320000 },
+                                { name: 'Nước sạch', detail: '25m3', value: 450000 },
+                                { name: 'Phí Gửi xe', detail: '1 Ô tô', value: 1200000 },
+                                { name: 'Phí khác', detail: 'Vệ sinh ngoài', value: 280000 }
+                            ]
+                        },
+                        {
+                            id: 'HD-1225-A1501', room: 'A-1501', owner: 'Lê Văn C', period: '12/2025', amount: 1560000, status: 'overdue', date: '---', items: [
+                                { name: 'Phí Quản lý', detail: '90m2 x 12.000đ', value: 1080000 },
+                                { name: 'Nước sạch', detail: '18m3', value: 320000 },
+                                { name: 'Phí Gửi xe', detail: '2 Xe máy', value: 160000 }
+                            ]
+                        },
+                        {
+                            id: 'HD-0126-B0505', room: 'B-0505', owner: 'Phạm Thị D', period: '01/2026', amount: 980000, status: 'paid', date: '2026-01-03', items: [
+                                { name: 'Phí Quản lý', detail: '65m2 x 12.000đ', value: 780000 },
+                                { name: 'Nước sạch', detail: '10m3', value: 200000 }
+                            ]
+                        },
+                        {
+                            id: 'HD-0126-A2202', room: 'A-2202', owner: 'Hoàng Văn E', period: '01/2026', amount: 4500000, status: 'unpaid', date: '---', items: [
+                                { name: 'Phí Quản lý', detail: '135m2 x 12.000đ', value: 1620000 },
+                                { name: 'Nước sạch', detail: '30m3', value: 580000 },
+                                { name: 'Phí Gửi xe', detail: '2 Ô tô', value: 2400000 }
+                            ]
+                        }
+                    ];
+
+                    // Recalculate mock total for consistency
+                    this.bills.forEach(b => {
+                        b.amount = b.items.reduce((sum, i) => sum + i.value, 0);
+                    });
+                },
+
+                get totalCollected() { return this.bills.filter(b => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0); },
+                get totalDebt() { return this.bills.filter(b => b.status !== 'paid').reduce((sum, b) => sum + b.amount, 0); },
+                get overdueCount() { return this.bills.filter(b => b.status === 'overdue').length; },
+
+                get filteredBills() {
+                    return this.bills.filter(b => {
+                        const matchSearch = this.searchQuery === '' ||
+                            b.room.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            b.owner.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        const matchStatus = this.filterStatus === 'all' || b.status === this.filterStatus;
+                        return matchSearch && matchStatus;
+                    });
+                }
+            }
+        }
+    </script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" class="overflow-hidden" x-data="billingApp">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-cloak
+        class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+        @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar transition-transform duration-300 z-[70]" :class="{ 'mobile-open': mobileMenu }">
+
+            <div class="logo-frame flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <i class="fas fa-city text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-slate-900 leading-none dark:text-white">SCP
+                            BMIS</h1>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Smart Building
+                        </p>
+                    </div>
+                </div>
+                <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-blue-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-grow py-6 overflow-y-auto custom-scroll space-y-1">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="../index.html" class="nav-link flex items-center">
+                    <i class="fas fa-city"></i> BMIS
+                </a>
+                <a href="facility.html" class="nav-link flex items-center">
+                    <i class="fas fa-tools"></i> Bảo trì Kỹ thuật
+                </a>
+                <a href="audit.html" class="nav-link flex items-center">
+                    <i class="fas fa-clipboard-check"></i> Tiêu chuẩn Vận hành
+                </a>
+                <a href="../show-app.html" target="_blank" class="nav-link flex items-center group">
+                    <i class="fas fa-mobile-alt"></i> App Mobile cư dân
+                    <i
+                        class="fas fa-external-link-alt text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity text-slate-400"></i>
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cư dân & Căn
+                    hộ</div>
+
+                <a href="residents.html" class="nav-link flex items-center">
+                    <i class="fas fa-users"></i> Danh sách cư dân
+                </a>
+                <a href="apartment-map.html" class="nav-link flex items-center">
+                    <i class="fas fa-map"></i> Sơ đồ căn hộ
+                </a>
+                <a href="requests.html" class="nav-link flex items-center">
+                    <i class="fas fa-comment-dots"></i> Yêu cầu & Phản ánh
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dịch vụ & Tài
+                    chính</div>
+
+                <a href="services.html" class="nav-link flex items-center">
+                    <i class="fas fa-concierge-bell"></i> Dịch vụ tiện ích
+                </a>
+                <a href="billing.html" class="nav-link active flex items-center">
+                    <i class="fas fa-file-invoice-dollar"></i> Phí quản lý & Nước
+                </a>
+                <a href="equipment.html" class="nav-link flex items-center">
+                    <i class="fas fa-server"></i> Hệ thống kỹ thuật
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">An ninh & Vệ
+                    sinh</div>
+
+                <a href="staff.html" class="nav-link flex items-center">
+                    <i class="fas fa-user-tie"></i> Nhân sự BQL
+                </a>
+                <a href="housekeeping.html" class="nav-link flex items-center">
+                    <i class="fas fa-broom"></i> Vệ sinh & Cảnh quan
+                </a>
+                <a href="security.html" class="nav-link flex items-center">
+                    <i class="fas fa-shield-alt"></i> An ninh bảo vệ
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-slate-100 flex items-center justify-between bg-white mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Online</span>
+                </div>
+                <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container bg-slate-50">
+            <header
+                class="main-header bg-white border-b border-slate-200 h-[80px] px-8 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileMenu = true"
+                        class="lg:hidden p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Trung tâm Chỉ huy SCP
+                        </h2>
+                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">PHÍ DỊCH VỤ &
+                            ĐIỆN NƯỚC</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-right">
+                    <div class="hidden xs:block">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Tổng doanh thu (Tạm tính)</p>
+                        <p class="text-sm md:text-xl font-black text-blue-600 tracking-tighter"
+                            x-text="((totalCollected + totalDebt)/1000000).toLocaleString('vi-VN') + ' Tr'"></p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll animate-fade-in">
+                <div class="space-y-6">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <div class="stat-card border-green-500/20 bg-green-50/50 dark:bg-green-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Thực
+                                        thu (Tháng)</p>
+                                    <p class="text-2xl font-black text-green-600"
+                                        x-text="(totalCollected/1000000).toLocaleString('vi-VN', {maximumFractionDigits: 1}) + ' Tr'">
+                                    </p>
+                                </div>
+                                <i class="fas fa-hand-holding-usd text-3xl text-green-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-red-500/20 bg-red-50/50 dark:bg-red-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Công nợ
+                                    </p>
+                                    <p class="text-2xl font-black text-red-600"
+                                        x-text="(totalDebt/1000000).toLocaleString('vi-VN', {maximumFractionDigits: 1}) + ' Tr'">
+                                    </p>
+                                </div>
+                                <i class="fas fa-chart-line text-3xl text-red-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-yellow-500/20 bg-yellow-50/50 dark:bg-yellow-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Hóa đơn
+                                        Quá hạn</p>
+                                    <p class="text-2xl font-black text-yellow-600" x-text="overdueCount"></p>
+                                </div>
+                                <i class="fas fa-exclamation-circle text-3xl text-yellow-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-blue-500/20 bg-blue-50/50 dark:bg-blue-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Tỷ lệ
+                                        thu</p>
+                                    <p class="text-2xl font-black text-blue-600"
+                                        x-text="Math.round((totalCollected / (totalCollected + totalDebt || 1))*100) + '%'">
+                                    </p>
+                                </div>
+                                <i class="fas fa-percentage text-3xl text-blue-500/30"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Search -->
+                    <div class="stat-card">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" x-model="searchQuery" placeholder="Tìm Căn hộ, Chủ hộ..."
+                                    class="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-medium outline-none focus:border-blue-500"
+                                    :class="darkMode ? 'text-white' : 'text-slate-800'">
+                            </div>
+                            <select x-model="filterStatus"
+                                class="px-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-bold outline-none focus:border-blue-500"
+                                :class="darkMode ? 'text-white' : 'text-slate-800'">
+                                <option value="all">Tất cả Trạng thái</option>
+                                <option value="paid">Đã thanh toán</option>
+                                <option value="unpaid">Chưa thanh toán</option>
+                                <option value="overdue">Quá hạn</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Bill List -->
+                    <div class="space-y-3">
+                        <template x-for="bill in filteredBills" :key="bill.id">
+                            <div @click="selectedBill = bill"
+                                class="stat-card cursor-pointer hover:border-blue-500 transition-all p-4" :class="{
+                                    'border-l-4 border-l-green-500': bill.status === 'paid',
+                                    'border-l-4 border-l-orange-500': bill.status === 'unpaid',
+                                    'border-l-4 border-l-red-500': bill.status === 'overdue'
+                                }">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-black shrink-0"
+                                        :class="{
+                                            'bg-green-500': bill.status === 'paid',
+                                            'bg-orange-500': bill.status === 'unpaid',
+                                            'bg-red-500': bill.status === 'overdue'
+                                         }">
+                                        <i class="fas fa-file-invoice-dollar"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h4 class="text-sm font-black mb-1 truncate"
+                                                    :class="darkMode ? 'text-white' : 'text-slate-800'"
+                                                    x-text="'Căn hộ ' + bill.room"></h4>
+                                                <p class="text-[9px] font-bold text-slate-500 uppercase truncate"
+                                                    x-text="bill.id + ' • ' + bill.owner"></p>
+                                            </div>
+                                            <span
+                                                class="px-3 py-1 rounded-full text-[8px] font-black uppercase shrink-0"
+                                                :class="{
+                                                    'bg-green-100 text-green-700': bill.status === 'paid',
+                                                    'bg-orange-100 text-orange-700': bill.status === 'unpaid',
+                                                     'bg-red-100 text-red-700': bill.status === 'overdue'
+                                                }"
+                                                x-text="bill.status === 'paid' ? 'Đã Thanh toán' : (bill.status === 'unpaid' ? 'Chờ Thanh toán' : 'Quá hạn')"></span>
+                                        </div>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px]">
+                                            <div>
+                                                <p class="text-slate-400 font-bold uppercase mb-0.5">Kỳ phí</p>
+                                                <p class="font-bold" :class="darkMode ? 'text-white' : 'text-slate-800'"
+                                                    x-text="bill.period"></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-slate-400 font-bold uppercase mb-0.5">Ngày TT/Hạn</p>
+                                                <p class="font-bold" :class="darkMode ? 'text-white' : 'text-slate-800'"
+                                                    x-text="bill.date"></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-slate-400 font-bold uppercase mb-0.5">Tổng tiền</p>
+                                                <p class="font-black text-blue-600 text-sm"
+                                                    x-text="bill.amount.toLocaleString() + 'đ'"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300"></i>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bill Detail Modal -->
+    <div x-show="selectedBill" x-cloak @click.away="selectedBill = null"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div @click.stop
+            class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-fade-in">
+            <div class="p-6 bg-gradient-to-r text-white flex justify-between items-center" :class="{
+                     'from-green-600 to-green-800': selectedBill?.status === 'paid',
+                     'from-orange-500 to-orange-700': selectedBill?.status === 'unpaid',
+                     'from-red-600 to-red-800': selectedBill?.status === 'overdue'
+                 }">
+                <div>
+                    <h3 class="text-xl font-black" x-text="'Hóa đơn ' + selectedBill?.period"></h3>
+                    <p class="text-white/80 text-xs font-bold uppercase"
+                        x-text="selectedBill?.room + ' - ' + selectedBill?.owner"></p>
+                </div>
+                <button @click="selectedBill = null" class="text-white/80 hover:text-white text-2xl"><i
+                        class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Bill Summary -->
+                <div class="text-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Tổng tiền thanh toán</p>
+                    <p class="text-3xl font-black text-blue-600"
+                        x-text="selectedBill?.amount.toLocaleString() + ' VNĐ'"></p>
+                    <p class="text-xs font-bold mt-2 px-2 py-1 rounded inline-block uppercase" :class="{
+                            'bg-green-100 text-green-700': selectedBill?.status === 'paid',
+                            'bg-orange-100 text-orange-700': selectedBill?.status === 'unpaid',
+                            'bg-red-100 text-red-700': selectedBill?.status === 'overdue'
+                        }"
+                        x-text="selectedBill?.status === 'paid' ? 'Đã Thanh toán' : (selectedBill?.status === 'unpaid' ? 'Chờ Thanh toán' : 'Quá hạn')">
+                    </p>
+                </div>
+
+                <!-- Bill Details -->
+                <div
+                    class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 space-y-3">
+                    <template x-for="item in selectedBill?.items">
+                        <div
+                            class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 last:border-0 pb-2 last:pb-0">
+                            <div>
+                                <p class="text-sm font-bold text-slate-800 dark:text-white" x-text="item.name"></p>
+                                <p class="text-[10px] text-slate-500" x-text="item.detail"></p>
+                            </div>
+                            <p class="text-sm font-bold text-slate-900 dark:text-white"
+                                x-text="item.value.toLocaleString() + 'đ'"></p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <template x-if="selectedBill?.status !== 'paid'">
+                        <button
+                            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-black uppercase text-xs hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                            <i class="fas fa-paper-plane mr-2"></i>Gửi Thông báo
+                        </button>
+                    </template>
+                    <template x-if="selectedBill?.status !== 'paid'">
+                        <button
+                            class="flex-1 py-3 bg-green-600 text-white rounded-lg font-black uppercase text-xs hover:bg-green-700 transition-colors shadow-lg shadow-green-200">
+                            <i class="fas fa-check-circle mr-2"></i>Xác nhận Thu tiền
+                        </button>
+                    </template>
+                    <template x-if="selectedBill?.status === 'paid'">
+                        <button
+                            class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-lg font-black uppercase text-xs hover:bg-slate-200 transition-colors">
+                            <i class="fas fa-print mr-2"></i>In Hóa đơn
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

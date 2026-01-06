@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{ tab: 'home', darkMode: localStorage.getItem('darkMode') === 'true' }"
+    :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SCP Security - An ninh Tòa nhà</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        scp: {
+                            bg: '#0f172a', // Slate-900 (Security Theme)
+                            card: '#1e293b', // Slate-800
+                            primary: '#3b82f6', // Blue-500
+                            accent: '#f59e0b' // Amber-500
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #0f172a;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-content {
+            padding-bottom: 90px;
+            height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .app-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 70px;
+            z-index: 50;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .nav-item {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .action-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+            background: #334155;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900" x-data="{
+    logs: [
+        { id: 1, action: 'Check-in Khách', detail: 'Nguyễn Văn Nam -> P.1205', time: '10:15', status: 'ok' },
+        { id: 2, action: 'Tuần tra Hầm B1', detail: 'Điểm check số 4: OK', time: '09:45', status: 'ok' },
+        { id: 3, action: 'Cảnh báo', detail: 'Cửa thoát hiểm Tầng 3 mở', time: '09:30', status: 'alert' }
+    ]
+}">
+
+    <div class="app-container">
+
+        <!-- Header -->
+        <header
+            class="p-6 pt-12 flex justify-between items-center bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full border-2 border-emerald-500 p-0.5">
+                    <img src="https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=150&q=80"
+                        alt="Guard" class="w-full h-full rounded-full object-cover">
+                </div>
+                <div>
+                    <h1 class="text-lg font-black leading-none">Vị trí: Cổng A</h1>
+                    <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1"><i
+                            class="fas fa-circle text-[8px] mr-1"></i>Đang trực (Online)</p>
+                </div>
+            </div>
+            <button
+                class="w-10 h-10 rounded-full bg-red-600 animate-pulse flex items-center justify-center text-white shadow-lg shadow-red-500/50">
+                <i class="fas fa-exclamation"></i>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <div class="app-content p-6">
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <button class="action-btn group">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl mb-2 shadow-lg shadow-blue-500/30 group-active:scale-90 transition-transform">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <span class="text-xs font-bold uppercase text-slate-300">Quét Khách</span>
+                </button>
+                <button class="action-btn group">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl mb-2 shadow-lg shadow-emerald-500/30 group-active:scale-90 transition-transform">
+                        <i class="fas fa-walking"></i>
+                    </div>
+                    <span class="text-xs font-bold uppercase text-slate-300">Tuần tra</span>
+                </button>
+                <button class="action-btn group">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center text-xl mb-2 shadow-lg shadow-orange-500/30 group-active:scale-90 transition-transform">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <span class="text-xs font-bold uppercase text-slate-300">Check xe</span>
+                </button>
+                <button class="action-btn group">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-slate-600 text-white flex items-center justify-center text-xl mb-2 group-active:scale-90 transition-transform">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <span class="text-xs font-bold uppercase text-slate-300">Tra cứu</span>
+                </button>
+            </div>
+
+            <!-- Recent Logs -->
+            <div>
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Nhật ký ca trực</h3>
+                <div class="space-y-4">
+                    <template x-for="log in logs" :key="log.id">
+                        <div class="bg-slate-800 rounded-xl p-4 flex items-center gap-4 border border-slate-700">
+                            <div class="w-2 h-10 rounded-full"
+                                :class="log.status === 'alert' ? 'bg-red-500' : 'bg-blue-500'"></div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center mb-1">
+                                    <h4 class="font-bold text-sm" x-text="log.action"></h4>
+                                    <span class="text-[10px] text-slate-400 font-mono" x-text="log.time"></span>
+                                </div>
+                                <p class="text-xs text-slate-400" x-text="log.detail"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-shield-alt text-xl mb-1"></i>
+                <span class="text-[8px] font-bold uppercase">Trực chính</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-camera text-xl mb-1"></i>
+                <span class="text-[8px] font-bold uppercase">Camera</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-clipboard-list text-xl mb-1"></i>
+                <span class="text-[8px] font-bold uppercase">Báo cáo</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-user-cog text-xl mb-1"></i>
+                <span class="text-[8px] font-bold uppercase">Cài đặt</span>
+            </a>
+        </nav>
+
+    </div>
+
+</body>
+
+</html>

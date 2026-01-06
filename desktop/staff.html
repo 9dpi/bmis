@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    mobileMenu: false,
+    staffApp: staffApp()
+}" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP BMIS - Nhân sự BQL</title>
+
+    <!-- ANTI-FLICKER SCRIPT -->
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '480px' },
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9', card: '#ffffff',
+                            primary: '#2563eb', accent: '#3b82f6',
+                            text: '#0f172a', muted: '#64748b'
+                        }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.98)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        function staffApp() {
+            return {
+                staffList: [],
+                searchQuery: '',
+                filterRole: 'all',
+                filterStatus: 'all',
+                selectedStaff: null,
+
+                init() {
+                    // Mock Staff Data with Unsplash Avatars
+                    this.staffList = [
+                        { id: 'S-001', name: 'Nguyễn Văn An', role: 'Head', dept: 'Ban Quản Lý', phone: '0901234567', email: 'an.nguyen@scp.com', status: 'Working', shift: 'Hành chính (08:00 - 17:30)', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80' },
+                        { id: 'S-002', name: 'Trần Minh Cường', role: 'Chief Engineer', dept: 'Kỹ Thuật', phone: '0901234568', email: 'cuong.tran@scp.com', status: 'Working', shift: 'Hành chính (08:00 - 17:30)', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80' },
+                        { id: 'S-003', name: 'Lê Thị Hoa', role: 'Receptionist', dept: 'CSKH', phone: '0901234569', email: 'hoa.le@scp.com', status: 'Working', shift: 'Ca sáng (06:00 - 14:00)', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80' },
+                        { id: 'S-004', name: 'Phạm Văn Dũng', role: 'Technician', dept: 'Kỹ Thuật', phone: '0901234570', email: 'dung.pham@scp.com', status: 'Working', shift: 'Ca sáng (06:00 - 14:00)', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80' },
+                        { id: 'S-005', name: 'Hoàng Thị Mai', role: 'Receptionist', dept: 'CSKH', phone: '0901234571', email: 'mai.hoang@scp.com', status: 'Off', shift: 'Ca chiều (14:00 - 22:00)', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80' },
+                        { id: 'S-006', name: 'Vũ Văn Bình', role: 'Technician', dept: 'Kỹ Thuật', phone: '0901234572', email: 'binh.vu@scp.com', status: 'Off', shift: 'Ca chiều (14:00 - 22:00)', avatar: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&w=150&q=80' },
+                        { id: 'S-007', name: 'Đặng Tuấn Anh', role: 'Security Manager', dept: 'An Ninh', phone: '0901234573', email: 'anh.dang@scp.com', status: 'Leave', shift: 'Hành chính (08:00 - 17:30)', avatar: 'https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=150&q=80' },
+                        { id: 'S-008', name: 'Nguyễn Thị Bích', role: 'Admin', dept: 'Hành chính', phone: '0901234574', email: 'bich.nguyen@scp.com', status: 'Working', shift: 'Hành chính (08:00 - 17:30)', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80' }
+                    ];
+                },
+
+                get totalStaff() { return this.staffList.length; },
+                get workingStaff() { return this.staffList.filter(s => s.status === 'Working').length; },
+
+                get staffByRole() {
+                    return {
+                        tech: this.staffList.filter(s => s.dept === 'Kỹ Thuật').length,
+                        cs: this.staffList.filter(s => s.dept === 'CSKH' || s.dept === 'Hành chính').length,
+                        manager: this.staffList.filter(s => s.role === 'Head' || s.role === 'Chief Engineer' || s.role === 'Security Manager').length
+                    };
+                },
+
+                get filteredStaff() {
+                    return this.staffList.filter(s => {
+                        const matchSearch = this.searchQuery === '' ||
+                            s.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            s.dept.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            s.role.toLowerCase().includes(this.searchQuery.toLowerCase());
+
+                        const matchRole = this.filterRole === 'all' || s.dept === this.filterRole;
+                        const matchStatus = this.filterStatus === 'all' || s.status === this.filterStatus;
+
+                        return matchSearch && matchRole && matchStatus;
+                    });
+                }
+            }
+        }
+    </script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" class="overflow-hidden" x-data="staffApp">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-cloak
+        class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+        @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar transition-transform duration-300 z-[70]" :class="{ 'mobile-open': mobileMenu }">
+
+            <div class="logo-frame flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <i class="fas fa-city text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-slate-900 leading-none dark:text-white">SCP
+                            BMIS</h1>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Smart Building
+                        </p>
+                    </div>
+                </div>
+                <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-blue-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-grow py-6 overflow-y-auto custom-scroll space-y-1">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="../index.html" class="nav-link flex items-center">
+                    <i class="fas fa-city"></i> BMIS
+                </a>
+                <a href="facility.html" class="nav-link flex items-center">
+                    <i class="fas fa-tools"></i> Bảo trì Kỹ thuật
+                </a>
+                <a href="audit.html" class="nav-link flex items-center">
+                    <i class="fas fa-clipboard-check"></i> Tiêu chuẩn Vận hành
+                </a>
+                <a href="../show-app.html" target="_blank" class="nav-link flex items-center group">
+                    <i class="fas fa-mobile-alt"></i> App Mobile cư dân
+                    <i
+                        class="fas fa-external-link-alt text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity text-slate-400"></i>
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cư dân & Căn
+                    hộ</div>
+
+                <a href="residents.html" class="nav-link flex items-center">
+                    <i class="fas fa-users"></i> Danh sách cư dân
+                </a>
+                <a href="apartment-map.html" class="nav-link flex items-center">
+                    <i class="fas fa-map"></i> Sơ đồ căn hộ
+                </a>
+                <a href="requests.html" class="nav-link flex items-center">
+                    <i class="fas fa-comment-dots"></i> Yêu cầu & Phản ánh
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dịch vụ & Tài
+                    chính</div>
+
+                <a href="services.html" class="nav-link flex items-center">
+                    <i class="fas fa-concierge-bell"></i> Dịch vụ tiện ích
+                </a>
+                <a href="billing.html" class="nav-link flex items-center">
+                    <i class="fas fa-file-invoice-dollar"></i> Phí quản lý & Nước
+                </a>
+                <a href="equipment.html" class="nav-link flex items-center">
+                    <i class="fas fa-server"></i> Hệ thống kỹ thuật
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">An ninh & Vệ
+                    sinh</div>
+
+                <a href="staff.html" class="nav-link active flex items-center">
+                    <i class="fas fa-user-tie"></i> Nhân sự BQL
+                </a>
+                <a href="housekeeping.html" class="nav-link flex items-center">
+                    <i class="fas fa-broom"></i> Vệ sinh & Cảnh quan
+                </a>
+                <a href="security.html" class="nav-link flex items-center">
+                    <i class="fas fa-shield-alt"></i> An ninh bảo vệ
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-slate-100 flex items-center justify-between bg-white mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Online</span>
+                </div>
+                <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container bg-slate-50">
+            <header
+                class="main-header bg-white border-b border-slate-200 h-[80px] px-8 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileMenu = true"
+                        class="lg:hidden p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Trung tâm Chỉ huy SCP
+                        </h2>
+                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">QUẢN LÝ NHÂN
+                            SỰ BQL</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-right">
+                    <div class="hidden xs:block">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Tổng số Nhân sự</p>
+                        <p class="text-sm md:text-xl font-black text-blue-600 tracking-tighter" x-text="totalStaff"></p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll animate-fade-in">
+                <div class="space-y-6">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <div class="stat-card border-blue-500/20 bg-blue-50/50 dark:bg-blue-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Quản lý
+                                        & Giám sát</p>
+                                    <p class="text-2xl font-black text-blue-600" x-text="staffByRole.manager"></p>
+                                </div>
+                                <i class="fas fa-user-tie text-3xl text-blue-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-orange-500/20 bg-orange-50/50 dark:bg-orange-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Kỹ
+                                        thuật</p>
+                                    <p class="text-2xl font-black text-orange-600" x-text="staffByRole.tech"></p>
+                                </div>
+                                <i class="fas fa-tools text-3xl text-orange-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-pink-500/20 bg-pink-50/50 dark:bg-pink-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Lễ tân
+                                        & CSKH</p>
+                                    <p class="text-2xl font-black text-pink-600" x-text="staffByRole.cs"></p>
+                                </div>
+                                <i class="fas fa-headset text-3xl text-pink-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-green-500/20 bg-green-50/50 dark:bg-green-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Đang
+                                        làm việc</p>
+                                    <p class="text-2xl font-black text-green-600" x-text="workingStaff"></p>
+                                </div>
+                                <i class="fas fa-business-time text-3xl text-green-500/30"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Search -->
+                    <div class="stat-card">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" x-model="searchQuery" placeholder="Tìm tên, bộ phận..."
+                                    class="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-medium outline-none focus:border-blue-500"
+                                    :class="darkMode ? 'text-white' : 'text-slate-800'">
+                            </div>
+                            <select x-model="filterRole"
+                                class="px-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-bold outline-none focus:border-blue-500"
+                                :class="darkMode ? 'text-white' : 'text-slate-800'">
+                                <option value="all">Tất cả Bộ phận</option>
+                                <option value="Kỹ Thuật">Kỹ thuật</option>
+                                <option value="CSKH">CSKH & Hành chính</option>
+                                <option value="Ban Quản Lý">Ban Quản Lý</option>
+                            </select>
+                            <select x-model="filterStatus"
+                                class="px-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-bold outline-none focus:border-blue-500"
+                                :class="darkMode ? 'text-white' : 'text-slate-800'">
+                                <option value="all">Tất cả Trạng thái</option>
+                                <option value="Working">Đang làm việc</option>
+                                <option value="Off">Nghỉ ca</option>
+                                <option value="Leave">Nghỉ phép</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Staff List -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <template x-for="person in filteredStaff" :key="person.id">
+                            <div @click="selectedStaff = person"
+                                class="stat-card cursor-pointer hover:scale-[1.02] transition-all p-0 overflow-hidden group">
+                                <div class="h-20 bg-gradient-to-r relative" :class="{
+                                        'from-blue-500/20 to-blue-600/20': person.dept === 'Ban Quản Lý',
+                                        'from-orange-500/20 to-orange-600/20': person.dept === 'Kỹ Thuật',
+                                        'from-pink-500/20 to-pink-600/20': person.dept === 'CSKH' || person.dept === 'Hành chính',
+                                        'from-slate-500/20 to-slate-600/20': person.dept === 'An Ninh'
+                                    }">
+                                    <div class="absolute -bottom-6 left-6">
+                                        <div
+                                            class="w-16 h-16 rounded-xl bg-white dark:bg-slate-800 p-1 shadow-lg overflow-hidden">
+                                            <img :src="person.avatar" class="w-full h-full object-cover rounded-lg"
+                                                :alt="person.name">
+                                        </div>
+                                    </div>
+                                    <div class="absolute top-4 right-4">
+                                        <span class="px-2 py-1 rounded text-[8px] font-black uppercase shadow-sm"
+                                            :class="{
+                                                'bg-green-500 text-white': person.status === 'Working',
+                                                'bg-slate-200 text-slate-600': person.status === 'Off',
+                                                'bg-orange-200 text-orange-700': person.status === 'Leave'
+                                            }"
+                                            x-text="person.status === 'Working' ? 'Đang làm' : (person.status === 'Off' ? 'Nghỉ ca' : 'Nghỉ phép')"></span>
+                                    </div>
+                                </div>
+                                <div class="pt-8 pb-4 px-6">
+                                    <h4 class="font-black text-base mb-0.5"
+                                        :class="darkMode ? 'text-white' : 'text-slate-900'" x-text="person.name"></h4>
+                                    <p class="text-xs font-bold text-blue-600 mb-2" x-text="person.role"></p>
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-500 mb-4">
+                                        <i class="fas fa-layer-group"></i>
+                                        <span class="font-bold uppercase" x-text="person.dept"></span>
+                                    </div>
+
+                                    <div
+                                        class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                        <div class="text-[10px]">
+                                            <p class="text-slate-400 font-bold uppercase mb-0.5">Ca làm việc</p>
+                                            <p class="font-bold text-slate-700 dark:text-slate-300"
+                                                x-text="person.shift"></p>
+                                        </div>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-700 hover:bg-blue-500 hover:text-white transition-colors flex items-center justify-center text-slate-400 text-xs">
+                                            <i class="fas fa-phone"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Detail Modal -->
+    <div x-show="selectedStaff" x-cloak @click.away="selectedStaff = null"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div @click.stop
+            class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-fade-in">
+            <div class="h-28 bg-gradient-to-r relative flex items-center px-8" :class="{
+                     'from-blue-600 to-blue-800': selectedStaff?.dept === 'Ban Quản Lý',
+                     'from-orange-500 to-orange-700': selectedStaff?.dept === 'Kỹ Thuật',
+                     'from-pink-500 to-pink-700': selectedStaff?.dept === 'CSKH' || selectedStaff?.dept === 'Hành chính',
+                     'from-slate-600 to-slate-800': selectedStaff?.dept === 'An Ninh'
+                 }">
+                <button @click="selectedStaff = null"
+                    class="absolute top-4 right-4 text-white/80 hover:text-white text-2xl"><i
+                        class="fas fa-times"></i></button>
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-full bg-white p-1 shadow-lg overflow-hidden">
+                        <img :src="selectedStaff?.avatar" class="w-full h-full object-cover rounded-full">
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-white" x-text="selectedStaff?.name"></h3>
+                        <p class="text-white/80 text-sm font-bold" x-text="selectedStaff?.role"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div
+                        class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Mã nhân sự</p>
+                        <p class="text-sm font-black text-slate-800 dark:text-white" x-text="selectedStaff?.id"></p>
+                    </div>
+                    <div
+                        class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Trạng thái</p>
+                        <span class="text-xs font-black uppercase" :class="{
+                                'text-green-600': selectedStaff?.status === 'Working',
+                                'text-slate-500': selectedStaff?.status === 'Off',
+                                'text-orange-600': selectedStaff?.status === 'Leave'
+                            }"
+                            x-text="selectedStaff?.status === 'Working' ? 'Đang làm việc' : (selectedStaff?.status === 'Off' ? 'Nghỉ ca' : 'Nghỉ phép')"></span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div
+                        class="flex items-center gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Điện thoại</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-white" x-text="selectedStaff?.phone">
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+                        <div
+                            class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Email</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-white" x-text="selectedStaff?.email">
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+                        <div
+                            class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Ca làm việc</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-white" x-text="selectedStaff?.shift">
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button
+                        class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-black uppercase text-xs hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                        <i class="fas fa-comment-alt mr-2"></i>Nhắn tin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

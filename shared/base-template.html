@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{
+    darkMode: false,
+    currentPage: 'overview',
+    liveKwh: 2450.8,
+    temp: 24.2,
+    humid: 55,
+    aqi: 22,
+    housekeepingLogs: [],
+    lastHkUpdate: 'Đang kết nối...'
+}" :class="{ 'dark': darkMode }">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP HMIS - Quản lý Bệnh viện</title>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        scp: { bg: '#0f172a', card: '#1e293b', primary: '#0d9488', accent: '#22d3ee' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+
+    <!-- External JavaScript Libraries -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Application JavaScript Modules -->
+    <script src="assets/js/data-service.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/app.js"></script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" x-init="
+    setInterval(() => { liveKwh = (parseFloat(liveKwh) + 0.5).toFixed(1); }, 2000);
+    setInterval(() => { temp = (24 + Math.random()).toFixed(1); humid = Math.floor(50 + Math.random() * 10); aqi = Math.floor(20 + Math.random() * 10); }, 3000);
+    startHKFlow($data);
+">
+    <div class="app-wrapper">
+        <!-- Sidebar Component -->
+        <aside class="sidebar">
+            <div class="logo-frame gap-4">
+                <div
+                    class="bg-teal-600 w-[56px] h-[56px] flex items-center justify-center rounded-xl shadow-lg text-white text-2xl">
+                    <i class="fas fa-hospital-user"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tighter uppercase leading-none"
+                        :class="darkMode ? 'text-white' : 'text-teal-900'">SCP HMIS</h1>
+                    <p class="text-[9px] opacity-60 uppercase tracking-widest mt-1 font-bold text-teal-600">Medical
+                        Center</p>
+                </div>
+            </div>
+
+            <nav class="flex-grow py-4 overflow-y-auto">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="index.html" class="nav-link active flex items-center px-6 py-4">
+                    <i class="fas fa-chart-line mr-3 w-5 text-lg"></i> Quản lý bệnh viện
+                </a>
+
+                <a href="views/facility.html" class="nav-link flex items-center px-6 py-4">
+                    <i class="fas fa-layer-group mr-3 w-5 text-lg text-orange-500"></i>
+                    Quản lý Cơ sở vật chất
+                    <span class="ml-auto bg-orange-500 text-[8px] text-white px-1.5 py-0.5 rounded-full font-bold">3D
+                        LAB</span>
+                </a>
+
+                <a href="views/audit.html" class="nav-link flex items-center px-6 py-4">
+                    <i class="fas fa-clipboard-check mr-3 w-5 text-lg text-teal-500"></i>
+                    83 Tiêu chí Chất lượng
+                </a>
+
+                <a href="show-app.html" target="_blank" class="nav-link flex items-center px-6 py-4 no-underline">
+                    <i class="fas fa-notes-medical mr-3 w-5 text-lg"></i>
+                    Ứng dụng Mobile App
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Khu vực
+                    chuyên môn</div>
+
+                <a href="pages/benh_nhan.html" class="nav-link flex items-center px-6 py-3">
+                    <i class="fas fa-user-injured mr-3 w-5"></i> Danh sách bệnh nhân
+                </a>
+                <div class="nav-link flex items-center px-6 py-3">
+                    <i class="fas fa-procedures mr-3 w-5"></i> Sơ đồ giường bệnh
+                </div>
+                <div class="nav-link flex items-center px-6 py-3">
+                    <i class="fas fa-microscope mr-3 w-5"></i> Xét nghiệm & CĐHA
+                </div>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vận hành &
+                    Hậu cần</div>
+
+                <a href="pages/kho.html" class="nav-link flex items-center px-6 py-3">
+                    <i class="fas fa-pills mr-3 w-5"></i> Quản lý kho dược
+                </a>
+                <div class="nav-link flex items-center px-6 py-3">
+                    <i class="fas fa-file-invoice-dollar mr-3 w-5"></i> Viện phí & BHYT
+                </div>
+            </nav>
+
+            <div class="p-6 border-t flex items-center justify-between transition-colors"
+                :class="darkMode ? 'border-slate-800' : 'border-teal-100'">
+                <div class="flex items-center gap-3">
+                    <div class="status-dot"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest"
+                        :class="darkMode ? 'text-slate-400' : 'text-teal-700'">Hệ thống sẵn sàng</span>
+                </div>
+                <button @click="darkMode = !darkMode; updateCharts()"
+                    class="p-2 bg-teal-800 dark:bg-slate-700 text-teal-100 rounded-lg hover:scale-105 transition-transform">
+                    <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container">
+            <!-- Header Component -->
+            <header class="main-header shadow-sm">
+                <div>
+                    <h2 class="text-[10px] text-teal-600 font-bold uppercase tracking-widest">Cơ sở: Bệnh viện Quốc tế
+                        SCP</h2>
+                    <h3 class="text-2xl font-black uppercase tracking-tight transition-colors"
+                        :class="darkMode ? 'text-white' : 'text-slate-800'">TRUNG TÂM ĐIỀU HÀNH HMIS</h3>
+                </div>
+                <div class="text-right">
+                    <p class="text-[9px] opacity-50 uppercase font-bold transition-colors"
+                        :class="darkMode ? 'text-white' : 'text-slate-900'">Tiêu thụ năng lượng</p>
+                    <p class="text-xl font-black text-teal-600 tracking-tighter" x-text="liveKwh + ' kWh'"></p>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content-scroll">
+                <!-- Content will be inserted here in each specific page -->
+                <slot></slot>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

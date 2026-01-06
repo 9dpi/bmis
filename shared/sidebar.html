@@ -1,0 +1,104 @@
+<!-- ============================================
+     Sidebar Component (Premium & Responsive)
+     Shared navigation sidebar for all pages
+     ============================================ -->
+
+<!-- Mobile Sidebar Overlay (Only visible when mobileMenu is true) -->
+<div x-show="mobileMenu" x-cloak class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+    @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0">
+</div>
+
+<aside class="sidebar" :class="mobileMenu ? 'fixed inset-y-0 left-0 translate-x-0 overflow-y-auto shadow-2xl' : ''"
+    class="lg:translate-x-0 transition-transform duration-300 z-[70]">
+
+    <div class="logo-frame flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="bg-teal-600 w-12 h-12 flex items-center justify-center rounded-xl shadow-lg text-white text-xl">
+                <i class="fas fa-hospital-user"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black tracking-tighter uppercase leading-none"
+                    :class="darkMode ? 'text-white' : 'text-teal-900'">SCP HMIS</h1>
+                <p class="text-[9px] opacity-60 uppercase tracking-widest mt-1 font-bold text-teal-600">Medical Center
+                </p>
+            </div>
+        </div>
+        <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-teal-600">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+    </div>
+
+    <nav class="flex-grow py-4 overflow-y-auto custom-scroll">
+        <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị</div>
+
+        <a href="../index.html" :class="currentPage === 'overview' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-4">
+            <i class="fas fa-chart-line mr-3"></i> Quản lý bệnh viện
+        </a>
+
+        <a href="facility.html" :class="currentPage === 'facility' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-4">
+            <i class="fas fa-layer-group mr-3 text-orange-500"></i>
+            Quản lý Cơ sở vật chất
+        </a>
+
+        <a href="audit.html" :class="currentPage === 'audit' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-4">
+            <i class="fas fa-clipboard-check mr-3 text-teal-500"></i>
+            83 Tiêu chí Chất lượng
+        </a>
+
+        <a href="../show-app.html" target="_blank" class="nav-link flex items-center px-6 py-4 no-underline">
+            <i class="fas fa-mobile-alt mr-3"></i>
+            Ứng dụng Mobile App
+        </a>
+
+        <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Khu vực chuyên môn
+        </div>
+
+        <a href="patients.html" :class="currentPage === 'patients' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-3">
+            <i class="fas fa-user-injured mr-3"></i> Danh sách bệnh nhân
+        </a>
+        <a href="bed-map.html" :class="currentPage === 'bed-map' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-3">
+            <i class="fas fa-procedures mr-3"></i> Sơ đồ giường bệnh
+        </a>
+        <a href="lab-tests.html" :class="currentPage === 'lab-tests' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-3">
+            <i class="fas fa-microscope mr-3"></i> Xét nghiệm & CĐHA
+        </a>
+
+        <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vận hành & Hậu cần
+        </div>
+
+        <a href="pharmacy.html" :class="currentPage === 'pharmacy' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-3">
+            <i class="fas fa-pills mr-3"></i> Quản lý kho dược
+        </a>
+        <a href="billing.html" :class="currentPage === 'billing' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-3">
+            <i class="fas fa-file-invoice-dollar mr-3"></i> Viện phí & BHYT
+        </a>
+        <a href="equipment.html" :class="currentPage === 'equipment' ? 'active' : ''"
+            class="nav-link flex items-center px-6 py-3">
+            <i class="fas fa-tools mr-3"></i> Quản lý thiết bị
+        </a>
+    </nav>
+
+    <div class="p-6 border-t flex items-center justify-between transition-colors"
+        :class="darkMode ? 'border-slate-800' : 'border-teal-100'">
+        <div class="flex items-center gap-3">
+            <div class="status-dot"></div>
+            <span class="text-[10px] font-bold uppercase tracking-widest"
+                :class="darkMode ? 'text-slate-400' : 'text-teal-700'">Hệ thống sẵn sàng</span>
+        </div>
+        <button @click="darkMode = !darkMode; if(window.updateCharts) updateCharts()"
+            class="p-2 bg-teal-800 dark:bg-slate-700 text-teal-100 rounded-lg hover:rotate-12 transition-all">
+            <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
+        </button>
+    </div>
+</aside>

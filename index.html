@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    mobileMenu: false,
+    liveKwh: 2450.8,
+    temp: 24.2,
+    humid: 55,
+    aqi: 22,
+    housekeepingLogs: [],
+    lastHkUpdate: 'Đang kết nối...',
+    stats: window.HMISData ? window.HMISData.getStats() : {}
+}" :class="{ 'dark': darkMode }" x-init="
+    $watch('darkMode', val => localStorage.setItem('darkMode', val));
+    if(window.HMISData) stats = window.HMISData.getStats();
+">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP BMIS - Building Management Dashboard</title>
+
+    <!-- ANTI-FLICKER SCRIPT -->
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '480px' },
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9', card: '#ffffff',
+                            primary: '#2563eb', accent: '#3b82f6',
+                            text: '#0f172a', muted: '#64748b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Enterprise Theme Overrides */
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .nav-link {
+            color: #64748b;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            margin: 4px 0;
+            padding: 12px 24px;
+            font-size: 13px;
+        }
+
+        .nav-link:hover {
+            color: #2563eb;
+            background-color: #f8fafc;
+        }
+
+        .nav-link.active {
+            color: #2563eb;
+            background-color: #eff6ff;
+            border-left-color: #2563eb;
+            font-weight: 700;
+        }
+
+        .nav-link i {
+            width: 24px;
+            text-align: center;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            padding: 1.25rem;
+            border-radius: 12px;
+        }
+
+        .logo-frame {
+            border-bottom: 1px solid #f1f5f9;
+        }
+    </style>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+
+    <!-- External JavaScript Libraries -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Application JavaScript Modules -->
+    <script src="assets/js/data-store.js"></script>
+    <script src="assets/js/data-service.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/app.js"></script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" x-init="
+    setInterval(() => { liveKwh = (parseFloat(liveKwh) + 0.5).toFixed(1); }, 2000);
+    setInterval(() => { temp = (24 + Math.random()).toFixed(1); humid = Math.floor(50 + Math.random() * 10); aqi = Math.floor(20 + Math.random() * 10); }, 3000);
+    startHKFlow($data);
+" class="overflow-hidden">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-cloak
+        class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+        @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar Component -->
+        <aside class="sidebar transition-transform duration-300 z-[70]" :class="{ 'mobile-open': mobileMenu }">
+
+            <div class="logo-frame flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <i class="fas fa-city text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-slate-900 leading-none dark:text-white">SCP
+                            BMIS</h1>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Smart Building
+                        </p>
+                    </div>
+                </div>
+                <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-blue-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-grow py-6 overflow-y-auto custom-scroll space-y-1">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="index.html" class="nav-link active flex items-center">
+                    <i class="fas fa-city"></i> BMIS
+                </a>
+                <a href="desktop/facility.html" class="nav-link flex items-center">
+                    <i class="fas fa-tools"></i> Bảo trì Kỹ thuật
+                </a>
+                <a href="desktop/audit.html" class="nav-link flex items-center">
+                    <i class="fas fa-clipboard-check"></i> Tiêu chuẩn Vận hành
+                </a>
+                <a href="show-app.html" target="_blank" class="nav-link flex items-center group">
+                    <i class="fas fa-mobile-alt"></i> App Mobile cư dân
+                    <i
+                        class="fas fa-external-link-alt text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity text-slate-400"></i>
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cư dân & Căn
+                    hộ</div>
+
+                <a href="desktop/residents.html" class="nav-link flex items-center">
+                    <i class="fas fa-users"></i> Danh sách cư dân
+                </a>
+                <a href="desktop/apartment-map.html" class="nav-link flex items-center">
+                    <i class="fas fa-map"></i> Sơ đồ căn hộ
+                </a>
+                <a href="desktop/requests.html" class="nav-link flex items-center">
+                    <i class="fas fa-comment-dots"></i> Yêu cầu & Phản ánh
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dịch vụ & Tài
+                    chính</div>
+
+                <a href="desktop/services.html" class="nav-link flex items-center">
+                    <i class="fas fa-concierge-bell"></i> Dịch vụ tiện ích
+                </a>
+                <a href="desktop/billing.html" class="nav-link flex items-center">
+                    <i class="fas fa-file-invoice-dollar"></i> Phí quản lý & Nước
+                </a>
+                <a href="desktop/equipment.html" class="nav-link flex items-center">
+                    <i class="fas fa-server"></i> Hệ thống kỹ thuật
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">An ninh & Vệ
+                    sinh</div>
+
+                <a href="desktop/staff.html" class="nav-link flex items-center">
+                    <i class="fas fa-user-tie"></i> Nhân sự BQL
+                </a>
+                <a href="desktop/housekeeping.html" class="nav-link flex items-center">
+                    <i class="fas fa-broom"></i> Vệ sinh & Cảnh quan
+                </a>
+                <a href="desktop/security.html" class="nav-link flex items-center">
+                    <i class="fas fa-shield-alt"></i> An ninh bảo vệ
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-slate-100 flex items-center justify-between bg-white mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Online</span>
+                </div>
+                <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container bg-slate-50">
+            <!-- Header Component -->
+            <header
+                class="main-header bg-white border-b border-slate-200 h-[80px] px-8 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileMenu = true"
+                        class="lg:hidden p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Dự án: VNPT COMPLEX
+                            CENTER</h2>
+                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">DASHBOARD
+                            GIÁM SÁT</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-right">
+                    <div class="hidden xs:block">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Điện năng hôm nay</p>
+                        <p class="text-sm md:text-xl font-black text-orange-500 tracking-tighter"
+                            x-text="liveKwh + ' kWh'"></p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content: Overview -->
+            <div class="content-scroll animate-fade-in">
+                <div class="space-y-6">
+                    <!-- Stats Cards Row -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Nhiệt độ Sảnh</span>
+                            <div class="text-2xl font-black text-emerald-500" x-text="temp + '°C'"></div>
+                            <div class="h-[40px] mt-2"><canvas id="chartTemp"></canvas></div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Độ ẩm Hầm xe</span>
+                            <div class="text-2xl font-black text-blue-500" x-text="humid + '%'"></div>
+                            <div class="h-[40px] mt-2"><canvas id="chartHumid"></canvas></div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Bụi mịn
+                                (PM2.5)</span>
+                            <div class="text-2xl font-black text-purple-500" x-text="aqi"></div>
+                            <div class="h-[40px] mt-2"><canvas id="chartAQI"></canvas></div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Cư dân</span>
+                            <div class="text-2xl font-black text-slate-800 dark:text-white"
+                                x-text="(4250).toLocaleString()"></div>
+                            <div class="mt-2 text-[10px] text-emerald-500 font-bold uppercase"><i
+                                    class="fas fa-arrow-up"></i> 1.2% TREND</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Căn hộ</span>
+                            <div class="text-2xl font-black text-slate-800 dark:text-white">1,500</div>
+                            <div class="mt-4 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div class="bg-blue-600 h-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Tỷ lệ lấp đầy</span>
+                            <div class="text-2xl font-black text-blue-600">92%</div>
+                            <div class="mt-4 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Phí thu T9</span>
+                            <div class="text-2xl font-black text-orange-500">2.1 Tỷ</div>
+                            <div class="h-[40px] mt-2"><canvas id="chartRevenue"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- System & Traffic Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Traffic Trend -->
+                        <div class="stat-card flex flex-col lg:col-span-1">
+                            <h4 class="text-[10px] font-bold uppercase mb-2 text-slate-500 flex justify-between">
+                                <span>Lưu lượng xe ra vào</span>
+                                <span class="text-blue-500 font-bold text-[8px]">Tăng 8%</span>
+                            </h4>
+                            <div class="flex-grow min-h-[100px] mb-2">
+                                <canvas id="chartTrafficTrend"></canvas>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-[9px] font-black">
+                                <div
+                                    class="p-2 bg-slate-50 dark:bg-slate-800/40 rounded border border-slate-100 dark:border-slate-700">
+                                    <p class="text-slate-400 uppercase mb-1">Giờ cao điểm</p>
+                                    <p class="text-slate-700 dark:text-white">17:30 - 19:00</p>
+                                </div>
+                                <div
+                                    class="p-2 bg-slate-50 dark:bg-slate-800/40 rounded border border-slate-100 dark:border-slate-700">
+                                    <p class="text-slate-400 uppercase mb-1">Xe vãng lai</p>
+                                    <p class="text-blue-600">~45 Xe/h</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Surveillance -->
+                        <div class="stat-card flex flex-col lg:col-span-1">
+                            <h4 class="text-[10px] font-bold uppercase mb-2 text-slate-500 flex justify-between">
+                                <span>An ninh sảnh chính</span>
+                                <span class="text-red-500 animate-pulse font-black">LIVE</span>
+                            </h4>
+                            <div
+                                class="cam-container border border-slate-200 dark:border-slate-700 relative mb-2 flex-grow min-h-[120px]">
+                                <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600"
+                                    class="w-full h-full object-cover opacity-80 dark:opacity-60">
+                                <div
+                                    class="absolute top-2 left-2 bg-blue-600 px-2 py-0.5 text-[8px] font-bold rounded uppercase text-white shadow-lg">
+                                    Lobby Main
+                                </div>
+                                <div class="absolute bottom-2 right-2 flex gap-1">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                                </div>
+                            </div>
+                            <button
+                                class="w-full py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                Xem toàn bộ Camera
+                            </button>
+                        </div>
+
+                        <!-- Elevator Status -->
+                        <div class="stat-card flex flex-col lg:col-span-1">
+                            <h4 class="text-[10px] font-bold uppercase mb-2 text-slate-500">Hệ thống Thang máy</h4>
+                            <div class="grid grid-cols-2 gap-2 text-[9px] font-black mb-2 transition-colors"
+                                :class="darkMode ? 'text-white' : 'text-slate-700'">
+                                <div
+                                    class="p-2 bg-slate-50 dark:bg-slate-800/40 rounded flex justify-between border border-slate-100 dark:border-slate-700">
+                                    <span class="text-slate-500">Hoạt động</span>
+                                    <span class="text-emerald-500">06 <i
+                                            class="fas fa-arrow-up animate-pulse"></i></span>
+                                </div>
+                                <div
+                                    class="p-2 bg-slate-50 dark:bg-slate-800/40 rounded flex justify-between border border-slate-100 dark:border-slate-700">
+                                    <span class="text-slate-500">Bảo trì</span>
+                                    <span class="text-red-500 font-bold">01</span>
+                                </div>
+                                <div
+                                    class="p-2 bg-slate-50 dark:bg-slate-800/40 rounded flex justify-between border border-slate-100 dark:border-slate-700">
+                                    <span class="text-slate-500">Tải trọng</span>
+                                    <span class="text-blue-600">450kg</span>
+                                </div>
+                                <div
+                                    class="p-2 bg-slate-50 dark:bg-slate-800/40 rounded flex justify-between border border-slate-100 dark:border-slate-700">
+                                    <span class="text-slate-500">Tầng cao</span>
+                                    <span class="text-slate-700 dark:text-white">32</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow min-h-[100px]">
+                                <canvas id="chartElevator"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Housekeeping -->
+                        <div class="stat-card flex flex-col lg:col-span-1">
+                            <h4
+                                class="text-[10px] font-bold uppercase mb-2 text-slate-500 flex justify-between items-center">
+                                <span>Vệ sinh & Cảnh quan</span>
+                                <span class="flex items-center gap-1.5">
+                                    <span class="text-[8px] text-slate-400 uppercase" x-text="lastHkUpdate"></span>
+                                    <div class="status-dot !bg-emerald-500"></div>
+                                </span>
+                            </h4>
+                            <div class="flex-grow overflow-y-auto space-y-2 pr-1 custom-scroll"
+                                style="max-height: 200px;">
+                                <template x-for="log in housekeepingLogs">
+                                    <div
+                                        class="p-3 rounded border border-slate-100 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700 shadow-sm transition-all hover:border-slate-300 cursor-pointer">
+                                        <div class="flex justify-between items-start mb-1.5">
+                                            <span class="text-[11px] font-black text-slate-800 dark:text-white"
+                                                x-text="log.loc"></span>
+                                            <span
+                                                class="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase"
+                                                x-text="log.status"></span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between text-[9px] font-semibold text-slate-500 uppercase tracking-tight">
+                                            <span><i class="fas fa-user text-[8px] mr-1"></i> <span
+                                                    x-text="log.staff"></span></span>
+                                            <span><i class="far fa-clock text-[8px] mr-1"></i> <span
+                                                    x-text="log.time"></span></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Status Row -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
+                        <div class="stat-card p-4 flex items-center gap-3"><i
+                                class="fas fa-fire-extinguisher text-red-500"></i>
+                            <div>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold">PCCC</p>
+                                <p class="text-[10px] font-black" :class="darkMode ? 'text-white' : 'text-slate-700'">
+                                    Tự động</p>
+                            </div>
+                        </div>
+                        <div class="stat-card p-4 flex items-center gap-3"><i
+                                class="fas fa-trash-alt text-slate-400"></i>
+                            <div>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold">Rác thải</p>
+                                <p class="text-[10px] font-black text-orange-600">Chờ thu gom</p>
+                            </div>
+                        </div>
+                        <div class="stat-card p-4 flex items-center gap-3"><i class="fas fa-tint text-blue-500"></i>
+                            <div>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold">Bể nước</p>
+                                <p class="text-[10px] font-black" :class="darkMode ? 'text-white' : 'text-slate-700'">
+                                    98% Đầy</p>
+                            </div>
+                        </div>
+                        <div class="stat-card p-4 flex items-center gap-3"><i class="fas fa-wifi text-indigo-500"></i>
+                            <div>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold">Internet</p>
+                                <p class="text-[10px] font-black" :class="darkMode ? 'text-white' : 'text-slate-700'">Ổn
+                                    định</p>
+                            </div>
+                        </div>
+                        <div class="stat-card p-4 flex items-center gap-3"><i
+                                class="fas fa-parking text-emerald-600"></i>
+                            <div>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold">Bãi xe</p>
+                                <p class="text-[10px] font-black text-emerald-600">Còn chỗ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Widgets (Request Call & Staff Duty) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Resident Request Table -->
+                        <div class="stat-card overflow-hidden">
+                            <div
+                                class="p-4 bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-700 border-slate-100 uppercase text-[10px] font-black text-slate-500 flex justify-between items-center">
+                                <span>Phản ánh cư dân</span>
+                                <span class="bg-red-500 text-white px-2 py-0.5 rounded text-[8px] animate-pulse">2
+                                    Mới</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-[11px]"
+                                    :class="darkMode ? 'text-white' : 'text-slate-700'">
+                                    <tbody class="divide-y dark:divide-slate-800/50 divide-slate-50">
+                                        <tr class="cursor-pointer hover:bg-slate-50 transition-colors">
+                                            <td class="p-4 font-bold text-slate-700 dark:text-white">Căn 1205 (B)</td>
+                                            <td class="p-4 opacity-80 italic">Báo rò rỉ nước nhà vệ sinh</td>
+                                            <td class="p-4 text-right text-red-600 font-bold uppercase text-[9px]">Gấp
+                                            </td>
+                                        </tr>
+                                        <tr class="cursor-pointer hover:bg-slate-50 transition-colors">
+                                            <td class="p-4 font-bold text-slate-700 dark:text-white">Căn 0812 (A)</td>
+                                            <td class="p-4 opacity-80 italic">Đăng ký thẻ xe máy mới</td>
+                                            <td class="p-4 text-right"><span
+                                                    class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[9px] uppercase font-black">Xử
+                                                    lý</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Staff Duty Mockup -->
+                        <div class="stat-card overflow-hidden">
+                            <div
+                                class="p-4 bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-700 border-slate-100 uppercase text-[10px] font-black text-slate-500 flex justify-between items-center">
+                                <span>Nhân sự trực ca (On Duty)</span>
+                                <a href="desktop/staff.html" class="text-[8px] text-blue-600 hover:underline">Chi
+                                    tiết</a>
+                            </div>
+                            <div
+                                class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[220px] lg:max-h-[140px] overflow-y-auto custom-scroll">
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                                        <i class="fas fa-tools text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black"
+                                            :class="darkMode ? 'text-white' : 'text-slate-800'">KT. Nguyễn Văn A</p>
+                                        <p class="text-[8px] text-slate-500 uppercase font-bold">Kỹ thuật Tòa nhà</p>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center text-slate-600">
+                                        <i class="fas fa-shield-alt text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black"
+                                            :class="darkMode ? 'text-white' : 'text-slate-800'">BV. Trần Văn B</p>
+                                        <p class="text-[8px] text-slate-500 uppercase font-bold">An ninh Sảnh</p>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
+                                        <i class="fas fa-microscope text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black"
+                                            :class="darkMode ? 'text-white' : 'text-slate-800'">KTV. Hoàng K</p>
+                                        <p class="text-[8px] text-slate-500 uppercase font-bold">CĐHA</p>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600">
+                                        <i class="fas fa-user-shield text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black"
+                                            :class="darkMode ? 'text-white' : 'text-slate-800'">BV. Phạm Văn F</p>
+                                        <p class="text-[8px] text-slate-500 uppercase font-bold">An ninh</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

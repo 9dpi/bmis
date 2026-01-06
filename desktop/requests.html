@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    mobileMenu: false,
+    requestApp: requestApp()
+}" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP BMIS - Yêu cầu Cư dân</title>
+
+    <!-- ANTI-FLICKER SCRIPT -->
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '480px' },
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9', card: '#ffffff',
+                            primary: '#2563eb', accent: '#3b82f6',
+                            text: '#0f172a', muted: '#64748b'
+                        }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.98)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        function requestApp() {
+            return {
+                requests: [],
+                searchQuery: '',
+                filterStatus: 'all',
+                filterType: 'all',
+                selectedRequest: null,
+
+                init() {
+                    // Mock Requests Data
+                    this.requests = [
+                        { id: 'REQ-0125', date: '2026-01-06 09:30', resident: 'Nguyễn Văn A', room: 'A-1205', type: 'technical', priority: 'high', status: 'pending', title: 'Mất nước sinh hoạt', content: 'Căn hộ bị mất nước từ 8h sáng nay, xin kiểm tra gấp.', technician: '' },
+                        { id: 'REQ-0124', date: '2026-01-06 08:15', resident: 'Trần Thị B', room: 'B-0812', type: 'security', priority: 'medium', status: 'processing', title: 'Tiếng ồn tầng trên', content: 'Căn hộ phía trên thi công gây ồn ào quá giờ quy định.', technician: 'Đội An Ninh' },
+                        { id: 'REQ-0123', date: '2026-01-05 17:45', resident: 'Lê Văn C', room: 'A-1501', type: 'cleaning', priority: 'low', status: 'completed', title: 'Vệ sinh hành lang', content: 'Hành lang tầng 15 có vết bẩn chưa được dọn.', technician: 'Tổ Vệ Sinh 2' },
+                        { id: 'REQ-0122', date: '2026-01-05 14:20', resident: 'Hoàng Thị D', room: 'B-0505', type: 'service', priority: 'medium', status: 'pending', title: 'Đăng ký thẻ xe', content: 'Tôi muốn đăng ký thêm 1 thẻ xe máy cho con trai.', technician: '' },
+                        { id: 'REQ-0121', date: '2026-01-05 09:10', resident: 'Phạm Văn E', room: 'A-2202', type: 'technical', priority: 'high', status: 'processing', title: 'Báo cháy giả', content: 'Đầu báo khói hành lang kêu liên tục dù không có cháy.', technician: 'Kỹ thuật Điện' },
+                        { id: 'REQ-0120', date: '2026-01-04 19:30', resident: 'Vũ Thị F', room: 'B-1909', type: 'complaint', priority: 'low', status: 'completed', title: 'Thái độ bảo vệ', content: 'Góp ý về thái độ của nhân viên trực sảnh B ca chiều.', technician: 'Ban Quản Lý' }
+                    ];
+                },
+
+                get pendingCount() { return this.requests.filter(r => r.status === 'pending').length; },
+                get processingCount() { return this.requests.filter(r => r.status === 'processing').length; },
+                get completedCount() { return this.requests.filter(r => r.status === 'completed').length; },
+                get urgentCount() { return this.requests.filter(r => r.priority === 'high' && r.status !== 'completed').length; },
+
+                get filteredRequests() {
+                    return this.requests.filter(r => {
+                        const matchSearch = this.searchQuery === '' ||
+                            r.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            r.room.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            r.resident.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        const matchStatus = this.filterStatus === 'all' || r.status === this.filterStatus;
+                        const matchType = this.filterType === 'all' || r.type === this.filterType;
+                        return matchSearch && matchStatus && matchType;
+                    });
+                }
+            }
+        }
+    </script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" class="overflow-hidden" x-data="requestApp">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-cloak
+        class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+        @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar transition-transform duration-300 z-[70]" :class="{ 'mobile-open': mobileMenu }">
+
+            <div class="logo-frame flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <i class="fas fa-city text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-slate-900 leading-none dark:text-white">SCP
+                            BMIS</h1>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Smart Building
+                        </p>
+                    </div>
+                </div>
+                <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-blue-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-grow py-6 overflow-y-auto custom-scroll space-y-1">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="../index.html" class="nav-link flex items-center">
+                    <i class="fas fa-city"></i> BMIS
+                </a>
+                <a href="facility.html" class="nav-link flex items-center">
+                    <i class="fas fa-tools"></i> Bảo trì Kỹ thuật
+                </a>
+                <a href="audit.html" class="nav-link flex items-center">
+                    <i class="fas fa-clipboard-check"></i> Tiêu chuẩn Vận hành
+                </a>
+                <a href="../show-app.html" target="_blank" class="nav-link flex items-center group">
+                    <i class="fas fa-mobile-alt"></i> App Mobile cư dân
+                    <i
+                        class="fas fa-external-link-alt text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity text-slate-400"></i>
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cư dân & Căn
+                    hộ</div>
+
+                <a href="residents.html" class="nav-link flex items-center">
+                    <i class="fas fa-users"></i> Danh sách cư dân
+                </a>
+                <a href="apartment-map.html" class="nav-link flex items-center">
+                    <i class="fas fa-map"></i> Sơ đồ căn hộ
+                </a>
+                <a href="requests.html" class="nav-link active flex items-center">
+                    <i class="fas fa-comment-dots"></i> Yêu cầu & Phản ánh
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dịch vụ & Tài
+                    chính</div>
+
+                <a href="services.html" class="nav-link flex items-center">
+                    <i class="fas fa-concierge-bell"></i> Dịch vụ tiện ích
+                </a>
+                <a href="billing.html" class="nav-link flex items-center">
+                    <i class="fas fa-file-invoice-dollar"></i> Phí quản lý & Nước
+                </a>
+                <a href="equipment.html" class="nav-link flex items-center">
+                    <i class="fas fa-server"></i> Hệ thống kỹ thuật
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">An ninh & Vệ
+                    sinh</div>
+
+                <a href="staff.html" class="nav-link flex items-center">
+                    <i class="fas fa-user-tie"></i> Nhân sự BQL
+                </a>
+                <a href="housekeeping.html" class="nav-link flex items-center">
+                    <i class="fas fa-broom"></i> Vệ sinh & Cảnh quan
+                </a>
+                <a href="security.html" class="nav-link flex items-center">
+                    <i class="fas fa-shield-alt"></i> An ninh bảo vệ
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-slate-100 flex items-center justify-between bg-white mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Online</span>
+                </div>
+                <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container bg-slate-50">
+            <header
+                class="main-header bg-white border-b border-slate-200 h-[80px] px-8 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileMenu = true"
+                        class="lg:hidden p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Trung tâm Chỉ huy SCP
+                        </h2>
+                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">TIẾP NHẬN YÊU
+                            CẦU</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-right">
+                    <div class="hidden xs:block">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Tổng yêu cầu</p>
+                        <p class="text-sm md:text-xl font-black text-blue-600 tracking-tighter"
+                            x-text="requests.length"></p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll animate-fade-in">
+                <div class="space-y-6">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <div class="stat-card border-purple-500/20 bg-purple-50/50 dark:bg-purple-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Mới
+                                        tiếp nhận</p>
+                                    <p class="text-2xl font-black text-purple-600" x-text="pendingCount"></p>
+                                </div>
+                                <i class="fas fa-inbox text-3xl text-purple-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-blue-500/20 bg-blue-50/50 dark:bg-blue-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Đang xử
+                                        lý</p>
+                                    <p class="text-2xl font-black text-blue-600" x-text="processingCount"></p>
+                                </div>
+                                <i class="fas fa-tools text-3xl text-blue-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-green-500/20 bg-green-50/50 dark:bg-green-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Đã hoàn
+                                        thành</p>
+                                    <p class="text-2xl font-black text-green-600" x-text="completedCount"></p>
+                                </div>
+                                <i class="fas fa-check-double text-3xl text-green-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-red-500/20 bg-red-50/50 dark:bg-red-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Khẩn
+                                        cấp !</p>
+                                    <p class="text-2xl font-black text-red-600" x-text="urgentCount"></p>
+                                </div>
+                                <i class="fas fa-exclamation-circle text-3xl text-red-500/30 animate-pulse"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Search -->
+                    <div class="stat-card">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" x-model="searchQuery"
+                                    placeholder="Tìm kiếm theo Mã, Nội dung, Căn hộ..."
+                                    class="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-medium outline-none focus:border-blue-500"
+                                    :class="darkMode ? 'text-white' : 'text-slate-800'">
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <select x-model="filterType"
+                                    class="px-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-bold outline-none focus:border-blue-500"
+                                    :class="darkMode ? 'text-white' : 'text-slate-800'">
+                                    <option value="all">Tất cả Loại</option>
+                                    <option value="technical">Kỹ thuật</option>
+                                    <option value="security">An ninh</option>
+                                    <option value="cleaning">Vệ sinh</option>
+                                    <option value="service">Dịch vụ</option>
+                                </select>
+                                <select x-model="filterStatus"
+                                    class="px-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-bold outline-none focus:border-blue-500"
+                                    :class="darkMode ? 'text-white' : 'text-slate-800'">
+                                    <option value="all">Tất cả Trạng thái</option>
+                                    <option value="pending">Mới tiếp nhận</option>
+                                    <option value="processing">Đang xử lý</option>
+                                    <option value="completed">Đã xong</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Request List -->
+                    <div class="space-y-3">
+                        <template x-for="req in filteredRequests" :key="req.id">
+                            <div @click="selectedRequest = req"
+                                class="stat-card cursor-pointer hover:border-blue-500 transition-all p-4" :class="{
+                                    'border-l-4 border-l-red-500': req.priority === 'high',
+                                    'border-l-4 border-l-blue-500': req.priority === 'medium',
+                                    'border-l-4 border-l-slate-300': req.priority === 'low'
+                                }">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-black shrink-0"
+                                        :class="{
+                                            'bg-orange-500': req.type === 'technical',
+                                            'bg-slate-700': req.type === 'security',
+                                            'bg-teal-500': req.type === 'cleaning',
+                                            'bg-purple-500': req.type === 'service',
+                                            'bg-gray-500': req.type === 'complaint'
+                                         }">
+                                        <i class="fas" :class="{
+                                            'fa-tools': req.type === 'technical',
+                                            'fa-shield-alt': req.type === 'security',
+                                            'fa-broom': req.type === 'cleaning',
+                                            'fa-concierge-bell': req.type === 'service',
+                                            'fa-bullhorn': req.type === 'complaint'
+                                        }"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h4 class="text-sm font-black mb-1 truncate"
+                                                    :class="darkMode ? 'text-white' : 'text-slate-800'"
+                                                    x-text="req.title"></h4>
+                                                <p class="text-[9px] font-bold text-slate-500 uppercase truncate"
+                                                    x-text="req.id + ' • ' + req.resident + ' (' + req.room + ')'"></p>
+                                            </div>
+                                            <span
+                                                class="px-3 py-1 rounded-full text-[8px] font-black uppercase shrink-0"
+                                                :class="{
+                                                    'bg-purple-100 text-purple-700': req.status === 'pending',
+                                                    'bg-blue-100 text-blue-700': req.status === 'processing',
+                                                    'bg-green-100 text-green-700': req.status === 'completed'
+                                                }"
+                                                x-text="req.status === 'pending' ? 'Mới tiếp nhận' : (req.status === 'processing' ? 'Đang xử lý' : 'Hoàn thành')"></span>
+                                        </div>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px]">
+                                            <div>
+                                                <p class="text-slate-400 font-bold uppercase mb-0.5">Thời gian</p>
+                                                <p class="font-bold" :class="darkMode ? 'text-white' : 'text-slate-800'"
+                                                    x-text="req.date"></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-slate-400 font-bold uppercase mb-0.5">Bộ phận</p>
+                                                <p class="font-black capitalize"
+                                                    :class="darkMode ? 'text-white' : 'text-slate-800'"
+                                                    x-text="req.type"></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-slate-400 font-bold uppercase mb-0.5">Ưu tiên</p>
+                                                <p class="font-black"
+                                                    :class="req.priority === 'high' ? 'text-red-600' : (req.priority === 'medium' ? 'text-blue-600' : 'text-slate-500')"
+                                                    x-text="req.priority === 'high' ? 'Cao/Khẩn cấp' : (req.priority === 'medium' ? 'Trung bình' : 'Thấp')">
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p class="text-slate-400 font-bold uppercase mb-0.5">Xử lý bởi</p>
+                                                <p class="font-black text-slate-500" x-text="req.technician || '---'">
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300"></i>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Detail Modal -->
+    <div x-show="selectedRequest" x-cloak @click.away="selectedRequest = null"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div @click.stop
+            class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div class="p-6 bg-gradient-to-r from-blue-600 to-blue-800 text-white flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-black" x-text="selectedRequest?.title"></h3>
+                    <p class="text-xs uppercase font-bold opacity-80" x-text="selectedRequest?.id"></p>
+                </div>
+                <button @click="selectedRequest = null" class="text-white/80 hover:text-white text-2xl"><i
+                        class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <!-- Info Summary -->
+                <div
+                    class="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div
+                        class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center font-black">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-black" :class="darkMode ? 'text-white' : 'text-slate-800'"
+                            x-text="selectedRequest?.resident"></p>
+                        <p class="text-xs text-slate-500">Căn hộ: <span class="font-bold text-blue-600"
+                                x-text="selectedRequest?.room"></span></p>
+                    </div>
+                    <div class="ml-auto text-right">
+                        <p class="text-[10px] text-slate-400 uppercase font-bold">Thời gian gửi</p>
+                        <p class="text-xs font-bold" :class="darkMode ? 'text-white' : 'text-slate-800'"
+                            x-text="selectedRequest?.date"></p>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-2">Nội dung phản ánh</p>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 text-sm leading-relaxed"
+                        :class="darkMode ? 'text-slate-300' : 'text-slate-700'" x-text="selectedRequest?.content">
+                    </div>
+                </div>
+
+                <!-- Status & Action -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-2">Trạng thái hiện tại</p>
+                        <div class="px-4 py-3 rounded-lg font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 border border-slate-200 dark:border-slate-700"
+                            x-text="selectedRequest?.status === 'pending' ? 'Đang chờ tiếp nhận' : (selectedRequest?.status === 'processing' ? 'Đội kỹ thuật đang xử lý' : 'Đã hoàn thành')">
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-2">Bộ phận phụ trách</p>
+                        <div class="px-4 py-3 rounded-lg font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 border border-slate-200 dark:border-slate-700"
+                            x-text="selectedRequest?.technician || 'Chưa phân công'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-2">
+                    <template x-if="selectedRequest?.status === 'pending'">
+                        <button
+                            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-black uppercase text-xs hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                            <i class="fas fa-check-circle mr-2"></i>Tiếp nhận & Phân công
+                        </button>
+                    </template>
+                    <template x-if="selectedRequest?.status === 'processing'">
+                        <button
+                            class="flex-1 py-3 bg-green-600 text-white rounded-lg font-black uppercase text-xs hover:bg-green-700 transition-colors shadow-lg shadow-green-200">
+                            <i class="fas fa-check-double mr-2"></i>Xác nhận Hoàn thành
+                        </button>
+                    </template>
+                    <button
+                        class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-lg font-black uppercase text-xs hover:bg-slate-200 transition-colors">
+                        <i class="fas fa-comment-alt mr-2"></i>Phản hồi Cư dân
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

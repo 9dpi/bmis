@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <title>Thần Số Học AI</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FDK7GC6X9J"></script>
+  
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    // QUAN TRỌNG: Dòng này giúp Analytics chạy được trong iframe của Google Script
+    gtag('config', 'G-FDK7GC6X9J', {
+      'cookie_flags': 'SameSite=None;Secure'
+    });
+  </script>
+    <style>
+       /* GIỮ NGUYÊN CSS ĐẸP NHƯ CŨ */
+       :root { --primary: #6a1b9a; --accent: #ffd700; --bg: #1a0b2e; --text: #fff; }
+       body { font-family: sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; display:flex; justify-content:center; }
+       .container { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; width: 100%; max-width: 500px; border: 1px solid rgba(255,255,255,0.1); }
+       input, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; box-sizing: border-box; }
+       input { background: rgba(0,0,0,0.3); border: 1px solid #4a148c; color: white; }
+       button { background: linear-gradient(45deg, #4a148c, #7b1fa2); color: white; border: none; font-weight: bold; cursor: pointer; }
+       button:disabled { background: #555; }
+       .result-box { margin-top: 20px; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; border-left: 4px solid var(--accent); display: none; line-height: 1.6; }
+       .loading { text-align: center; display: none; margin-top: 15px; }
+       .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite linear; margin: 0 auto; }
+       @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 style="text-align:center; color: var(--accent)">🔮 Thần Số Học AI</h2>
+      
+      <label>Họ tên:</label>
+      <input type="text" id="hoTen" placeholder="Nhập họ tên...">
+      
+      <label>Ngày sinh (Dương lịch):</label>
+      <div style="display:flex; gap:5px">
+        <input type="number" id="ngay" placeholder="Ngày">
+        <input type="number" id="thang" placeholder="Tháng">
+        <input type="number" id="nam" placeholder="Năm">
+      </div>
+
+      <button id="btnXem" onclick="handleTraCuu()">✨ XEM VẬN MỆNH ✨</button>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Đang kết nối vũ trụ...</p>
+      </div>
+
+      <div class="result-box" id="ketQua"></div>
+    </div>
+
+    <script>
+      // HÀM XỬ LÝ TRÊN GIAO DIỆN
+      function handleTraCuu() {
+        var ten = document.getElementById('hoTen').value;
+        var d = document.getElementById('ngay').value;
+        var m = document.getElementById('thang').value;
+        var y = document.getElementById('nam').value;
+
+        if(!ten || !d || !m || !y) { alert("Vui lòng nhập đủ thông tin!"); return; }
+
+        // Tính toán Client side
+        var soChuDao = calculateLifePath(d, m, y);
+        var namCaNhan = calculatePersonalYear(d, m);
+
+        // Hiển thị loading
+        document.getElementById('btnXem').disabled = true;
+        document.getElementById('btnXem').innerText = "Đang luận giải...";
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('ketQua').style.display = 'none';
+
+        // Đóng gói dữ liệu
+        var dataGuiDi = {
+          ho_ten: ten,
+          ngay_sinh: d + "/" + m + "/" + y,
+          so_chu_dao: soChuDao,
+          nam_ca_nhan: namCaNhan,
+          su_menh: "Tính theo tên"
+        };
+
+        // GỌI HÀM TRONG CODE.GS (Quan trọng!)
+        google.script.run
+          .withSuccessHandler(hienThiKetQua)
+          .withFailureHandler(baoLoi)
+          .xuLyTraCuu(dataGuiDi);
+      }
+
+      function hienThiKetQua(response) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('btnXem').disabled = false;
+        document.getElementById('btnXem').innerText = "✨ XEM VẬN MỆNH ✨";
+
+        if(response.result == "success") {
+          var box = document.getElementById('ketQua');
+          box.style.display = 'block';
+          // Format xuống dòng cho đẹp
+          var noidung = response.data.replace(/\n/g, "<br>");
+          box.innerHTML = `<h3 style="color:#ffd700; margin-top:0">Kết quả luận giải</h3>${noidung}`;
+        } else {
+          alert("Lỗi: " + response.message);
+        }
+      }
+
+      function baoLoi(error) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('btnXem').disabled = false;
+        alert("Lỗi kết nối: " + error.message);
+      }
+
+      // --- LOGIC TÍNH TOÁN (Giữ nguyên) ---
+      function reduceSum(n) {
+        let sum = 0; String(n).split('').forEach(c => sum += parseInt(c));
+        return (sum > 9 && sum!=11 && sum!=22) ? reduceSum(sum) : sum;
+      }
+      function calculateLifePath(d, m, y) {
+        return reduceSum(reduceSum(d) + reduceSum(m) + reduceSum(y));
+      }
+      function calculatePersonalYear(d, m) {
+        let py = reduceSum(reduceSum(d) + reduceSum(m) + reduceSum(2025));
+        return py > 9 ? reduceSum(py) : py;
+      }
+    </script>
+  </body>
+</html>

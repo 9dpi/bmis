@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{ 
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    mobileMenu: false,
+    liveKwh: 2450.8,
+    showLayer: 'arch',
+    showModal: false,
+    pcccIssue: {
+        location: 'Hành lang khu Cấp cứu (Phía Đông)',
+        status: 'Cảnh báo: Áp suất thấp (Low Pressure)',
+        detail: 'Hệ thống phát hiện sụt giảm áp suất tại cụm vòi phun số 04. Có khả năng rò rỉ tại van chặn tầng 1.',
+        action: '1. Kiểm tra trạm bơm bù áp.\n2. Kiểm tra trực tiếp van khu vực C.\n3. Thông báo đội kỹ thuật trực ca.'
+    }
+}" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP BMIS - Bảo trì Kỹ thuật Tòa nhà</title>
+
+    <!-- ANTI-FLICKER SCRIPT -->
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '480px' },
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9', card: '#ffffff',
+                            primary: '#2563eb', accent: '#3b82f6',
+                            text: '#0f172a', muted: '#64748b'
+                        }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.98)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+
+    <!-- External JavaScript Libraries -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
+    <!-- Application JavaScript Modules -->
+    <script>
+        // Initialize PanZoom when page loads
+        window.addEventListener('load', () => {
+            const elem = document.getElementById('panzoom-container');
+            if (elem) {
+                const panzoom = Panzoom(elem, {
+                    maxScale: 5,
+                    minScale: 0.5,
+                    contain: 'outside'
+                });
+
+                elem.parentElement.addEventListener('wheel', (event) => {
+                    if (!event.shiftKey) return;
+                    panzoom.zoomWithWheel(event);
+                });
+            }
+        });
+    </script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" class="overflow-hidden" x-init="
+    setInterval(() => { liveKwh = (parseFloat(liveKwh) + 0.5).toFixed(1); }, 2000);
+">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-cloak
+        class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+        @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar Component -->
+        <aside class="sidebar transition-transform duration-300 z-[70]" :class="{ 'mobile-open': mobileMenu }">
+
+            <div class="logo-frame flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <i class="fas fa-city text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-slate-900 leading-none dark:text-white">SCP
+                            BMIS</h1>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Smart Building
+                        </p>
+                    </div>
+                </div>
+                <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-blue-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-grow py-6 overflow-y-auto custom-scroll space-y-1">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="../index.html" class="nav-link flex items-center">
+                    <i class="fas fa-city"></i> BMIS
+                </a>
+                <a href="facility.html" class="nav-link active flex items-center">
+                    <i class="fas fa-tools"></i> Bảo trì Kỹ thuật
+                </a>
+                <a href="audit.html" class="nav-link flex items-center">
+                    <i class="fas fa-clipboard-check"></i> Tiêu chuẩn Vận hành
+                </a>
+                <a href="../show-app.html" target="_blank" class="nav-link flex items-center group">
+                    <i class="fas fa-mobile-alt"></i> App Mobile cư dân
+                    <i
+                        class="fas fa-external-link-alt text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity text-slate-400"></i>
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cư dân & Căn
+                    hộ</div>
+
+                <a href="residents.html" class="nav-link flex items-center">
+                    <i class="fas fa-users"></i> Danh sách cư dân
+                </a>
+                <a href="apartment-map.html" class="nav-link flex items-center">
+                    <i class="fas fa-map"></i> Sơ đồ căn hộ
+                </a>
+                <a href="requests.html" class="nav-link flex items-center">
+                    <i class="fas fa-comment-dots"></i> Yêu cầu & Phản ánh
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dịch vụ & Tài
+                    chính</div>
+
+                <a href="services.html" class="nav-link flex items-center">
+                    <i class="fas fa-concierge-bell"></i> Dịch vụ tiện ích
+                </a>
+                <a href="billing.html" class="nav-link flex items-center">
+                    <i class="fas fa-file-invoice-dollar"></i> Phí quản lý & Nước
+                </a>
+                <a href="equipment.html" class="nav-link flex items-center">
+                    <i class="fas fa-server"></i> Hệ thống kỹ thuật
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">An ninh & Vệ
+                    sinh</div>
+
+                <a href="staff.html" class="nav-link flex items-center">
+                    <i class="fas fa-user-tie"></i> Nhân sự BQL
+                </a>
+                <a href="housekeeping.html" class="nav-link flex items-center">
+                    <i class="fas fa-broom"></i> Vệ sinh & Cảnh quan
+                </a>
+                <a href="security.html" class="nav-link flex items-center">
+                    <i class="fas fa-shield-alt"></i> An ninh bảo vệ
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-slate-100 flex items-center justify-between bg-white mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Online</span>
+                </div>
+                <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container bg-slate-50">
+            <header
+                class="main-header bg-white border-b border-slate-200 h-[80px] px-8 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileMenu = true"
+                        class="lg:hidden p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Dự án: VNPT COMPLEX
+                            CENTER</h2>
+                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">BẢO TRÌ & KỸ
+                            THUẬT</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-right">
+                    <div class="hidden xs:block">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Điện năng hôm nay</p>
+                        <p class="text-sm md:text-xl font-black text-orange-500 tracking-tighter"
+                            x-text="liveKwh + ' kWh'"></p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll animate-fade-in">
+                <div class="h-full flex flex-col space-y-6">
+                    <!-- Page Header with Layer Switcher -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                        <div>
+                            <h2 class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">
+                                Hệ thống Kỹ thuật Tòa nhà (BMS)
+                            </h2>
+                            <h3 class="text-2xl font-black uppercase transition-colors"
+                                :class="darkMode ? 'text-white' : 'text-slate-800'">
+                                Mô phỏng Hệ thống & Sự cố
+                            </h3>
+                        </div>
+                        <div
+                            class="flex flex-wrap gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                            <button @click="showLayer = 'arch'"
+                                class="px-5 py-2.5 rounded-lg text-[10px] font-black uppercase transition-all duration-300"
+                                :class="showLayer === 'arch' ? 'bg-blue-600 text-white shadow-lg scale-105' : 'text-slate-500 hover:text-blue-600'"><i
+                                    class="fas fa-building mr-1.5"></i> Kiến trúc</button><button
+                                @click="showLayer = 'electric'"
+                                class="px-5 py-2.5 rounded-lg text-[10px] font-black uppercase transition-all duration-300"
+                                :class="showLayer === 'electric' ? 'bg-yellow-500 text-white shadow-lg scale-105' : 'text-slate-500 hover:text-yellow-500'"><i
+                                    class="fas fa-bolt mr-1.5"></i> Điện lưới</button><button
+                                @click="showLayer = 'water'"
+                                class="px-5 py-2.5 rounded-lg text-[10px] font-black uppercase transition-all duration-300"
+                                :class="showLayer === 'water' ? 'bg-cyan-500 text-white shadow-lg scale-105' : 'text-slate-500 hover:text-cyan-500'"><i
+                                    class="fas fa-faucet mr-1.5"></i> Nước sạch</button><button
+                                @click="showLayer = 'fire'"
+                                class="px-5 py-2.5 rounded-lg text-[10px] font-black uppercase transition-all duration-300"
+                                :class="showLayer === 'fire' ? 'bg-red-600 text-white shadow-lg scale-105' : 'text-slate-500 hover:text-red-600'"><i
+                                    class="fas fa-fire-extinguisher mr-1.5"></i> PCCC</button>
+                        </div>
+                    </div>
+
+                    <!-- 3D Viewer -->
+                    <div class="flex flex-grow gap-6 min-h-[500px]">
+                        <div
+                            class="relative flex-grow bg-slate-200 dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-800 overflow-hidden shadow-2xl">
+                            <div id="panzoom-container" class="absolute inset-0 cursor-grab active:cursor-grabbing">
+                                <div class="absolute inset-0 flex items-center justify-center p-8"><img
+                                        x-show="showLayer === 'arch'" src="../assets/images/3d.png"
+                                        class="max-w-full max-h-full object-contain animate-fade-in"
+                                        alt="Architecture"><img x-show="showLayer === 'electric'"
+                                        src="../assets/images/3d-electric.png"
+                                        class="max-w-full max-h-full object-contain animate-fade-in"
+                                        alt="Electrical"><img x-show="showLayer === 'water'"
+                                        src="../assets/images/3d-water.png"
+                                        class="max-w-full max-h-full object-contain animate-fade-in"
+                                        alt="Water Systems"><img x-show="showLayer === 'fire'"
+                                        src="../assets/images/3d-fire.png"
+                                        class="max-w-full max-h-full object-contain animate-fade-in" alt="Fire Safety">
+                                    <div x-show="showLayer === 'fire'" @click="showModal = true"
+                                        class="absolute top-[45%] left-[60%] w-8 h-8 bg-red-600/80 rounded-full animate-ping cursor-pointer border-4 border-white/30"
+                                        title="Cảnh báo: Áp suất vòi phun thấp"></div>
+                                </div>
+                            </div>
+                            <div class="absolute top-6 right-6 flex flex-col gap-2 pointer-events-none">
+                                <div
+                                    class="bg-black/60 backdrop-blur-xl border border-white/10 text-white text-[10px] px-4 py-2 rounded-2xl font-bold flex items-center shadow-lg">
+                                    <i class="fas fa-mouse mr-2 text-blue-400"></i> Shift + Wheel để Zoom - Giữ để Kéo
+                                </div>
+                            </div>
+                            <div class="absolute bottom-6 left-6 pointer-events-none">
+                                <div
+                                    class="bg-blue-600/90 backdrop-blur-md text-white text-[10px] px-4 py-2 rounded-2xl font-black uppercase tracking-widest shadow-lg">
+                                    <i class="fas fa-cube mr-2"></i> 3D Building Simulation
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for PCCC Issue -->
+    <div x-show="showModal" x-cloak
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div @click.away="showModal = false"
+            class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-red-500/20 animate-fade-in">
+            <div class="p-6 bg-red-600 text-white flex justify-between items-center">
+                <div class="flex items-center gap-3"><i class="fas fa-exclamation-triangle animate-pulse text-xl"></i>
+                    <h3 class="font-black uppercase tracking-tight">Chi tiết sự cố PCCC</h3>
+                </div><button @click="showModal = false" class="text-white/80 hover:text-white"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">Vị trí</p>
+                    <p class="text-sm font-black text-slate-800 dark:text-white" x-text="pcccIssue.location"></p>
+                </div>
+                <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                    <p class="text-[9px] font-bold text-red-600 uppercase">Trạng thái hiện tại</p>
+                    <p class="text-xs font-bold text-red-700 dark:text-red-400" x-text="pcccIssue.status"></p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">Thông tin chi tiết</p>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed" x-text="pcccIssue.detail"></p>
+                </div>
+                <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p class="text-[9px] font-bold text-blue-600 uppercase mb-2">Quy trình xử lý đề xuất</p>
+                    <p class="text-[11px] text-slate-700 dark:text-slate-300 whitespace-pre-line leading-loose"
+                        x-text="pcccIssue.action"></p>
+                </div><button @click="showModal = false"
+                    class="w-full py-3 bg-slate-900 dark:bg-blue-600 text-white text-xs font-black uppercase rounded-lg hover:opacity-90 transition-opacity">Đã
+                    xác nhận & Điều phối</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

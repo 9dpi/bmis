@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{ tab: 'tasks', darkMode: localStorage.getItem('darkMode') === 'true' }"
+    :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SCP Technician - Kỹ thuật Tòa nhà</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        scp: {
+                            bg: '#f8fafc',
+                            card: '#ffffff',
+                            primary: '#ea580c', // Orange-600 (Technical Theme)
+                            secondary: '#64748b'
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #f8fafc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dark .app-container {
+            background-color: #0f172a;
+        }
+
+        .app-content {
+            padding-bottom: 90px;
+            height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .app-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 70px;
+            z-index: 50;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .dark .bottom-nav {
+            background: #1e293b;
+            border-top: 1px solid #334155;
+        }
+
+        .nav-item {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: #ea580c;
+            background: rgba(234, 88, 12, 0.05);
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 12px;
+            border-left: 4px solid transparent;
+        }
+
+        .dark .task-card {
+            background: #1e293b;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100" x-data="{
+    filter: 'pending',
+    tasks: [
+        { id: 'WO-101', title: 'Sửa bơm nước B1', loc: 'Hầm B1 • Khu vực Bơm', priority: 'high', status: 'pending', time: '09:00', desc: 'Bơm số 2 kêu to, kiểm tra bạc đạn.' },
+        { id: 'WO-102', title: 'Thay bóng đèn sảnh', loc: 'Tầng 1 • Sảnh A', priority: 'low', status: 'pending', time: '14:00', desc: '3 bóng downlight bị cháy.' },
+        { id: 'WO-103', title: 'Bảo trì Thang máy P1', loc: 'Tầng Mái • Phòng máy', priority: 'medium', status: 'done', time: '08:00', desc: 'Bảo trì định kỳ tháng 10.' },
+        { id: 'WO-104', title: 'Kiểm tra rò rỉ nước', loc: 'Căn hộ 1205', priority: 'high', status: 'pending', time: '10:30', desc: 'Cư dân báo thấm trần nhà vệ sinh.' }
+    ],
+    get filteredTasks() {
+        if (this.filter === 'all') return this.tasks;
+        return this.tasks.filter(t => (this.filter === 'done' ? t.status === 'done' : t.status !== 'done'));
+    }
+}">
+
+    <div class="app-container transition-colors duration-300">
+
+        <!-- Header -->
+        <header class="p-6 pt-12 bg-orange-600 text-white sticky top-0 z-40 rounded-b-3xl shadow-lg">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h1 class="text-xl font-black">Xin chào, Kỹ thuật viên</h1>
+                    <p class="text-xs font-bold opacity-80 uppercase tracking-widest mt-1">Ca trực: 08:00 - 17:00</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=150&q=80"
+                        alt="Tech" class="w-full h-full object-cover">
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="flex justify-between gap-2 overflow-x-auto pb-2">
+                <div @click="filter = 'pending'"
+                    class="flex-1 bg-white/10 rounded-xl p-3 backdrop-blur-md border border-white/10 cursor-pointer"
+                    :class="{'bg-white/30': filter === 'pending'}">
+                    <p class="text-2xl font-black">03</p>
+                    <p class="text-[9px] uppercase font-bold opacity-80">Chờ xử lý</p>
+                </div>
+                <div @click="filter = 'done'"
+                    class="flex-1 bg-white/10 rounded-xl p-3 backdrop-blur-md border border-white/10 cursor-pointer"
+                    :class="{'bg-white/30': filter === 'done'}">
+                    <p class="text-2xl font-black">01</p>
+                    <p class="text-[9px] uppercase font-bold opacity-80">Hoàn thành</p>
+                </div>
+                <div class="flex-1 bg-white/10 rounded-xl p-3 backdrop-blur-md border border-white/10 opacity-50">
+                    <p class="text-2xl font-black">85%</p>
+                    <p class="text-[9px] uppercase font-bold opacity-80">KPI Tuần</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="app-content p-6">
+
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest opacity-50">Danh
+                    sách công việc</h3>
+                <button
+                    class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 text-slate-500 shadow-sm flex items-center justify-center">
+                    <i class="fas fa-filter text-xs"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <template x-for="task in filteredTasks" :key="task.id">
+                    <div class="task-card" :class="{
+                            'border-l-red-500': task.priority === 'high',
+                            'border-l-yellow-500': task.priority === 'medium',
+                            'border-l-blue-500': task.priority === 'low'
+                        }">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[9px] font-black uppercase text-slate-400" x-text="task.id"></span>
+                            <span class="text-[9px] font-bold px-2 py-0.5 rounded uppercase" :class="{
+                                    'bg-red-100 text-red-600': task.priority === 'high',
+                                    'bg-yellow-100 text-yellow-600': task.priority === 'medium',
+                                    'bg-blue-100 text-blue-600': task.priority === 'low'
+                                }" x-text="task.priority"></span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800 dark:text-white leading-tight mb-1"
+                            x-text="task.title"></h4>
+                        <p class="text-xs text-slate-500 mb-3 flex items-center gap-1">
+                            <i class="fas fa-map-marker-alt text-[10px]"></i> <span x-text="task.loc"></span>
+                        </p>
+
+                        <div
+                            class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3 mt-3">
+                            <p class="text-[10px] font-bold text-slate-400">Hạn: <span x-text="task.time"
+                                    class="text-slate-600 dark:text-slate-300"></span></p>
+                            <button
+                                class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-sm transition-transform active:scale-95"
+                                :class="task.status === 'done' ? 'bg-green-100 text-green-600' : 'bg-slate-800 text-white'">
+                                <span x-text="task.status === 'done' ? 'Đã xong' : 'Bắt đầu'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+        </div>
+
+        <!-- Floating Scan Button -->
+        <button
+            class="fixed bottom-24 right-6 w-16 h-16 bg-orange-600 rounded-full text-white shadow-xl shadow-orange-400/50 flex items-center justify-center text-2xl z-40 transition-transform active:scale-90 hover:scale-110">
+            <i class="fas fa-qrcode"></i>
+        </button>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-clipboard-list text-xl mb-1"></i>
+                <span class="text-[8px] font-bold uppercase">Công việc</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-history text-xl mb-1"></i>
+                <span class="text-[8px] font-bold uppercase">Lịch sử</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-user-cog text-xl mb-1"></i>
+                <span class="text-[8px] font-bold uppercase">Cài đặt</span>
+            </a>
+        </nav>
+
+    </div>
+
+</body>
+
+</html>

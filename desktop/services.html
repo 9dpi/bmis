@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    mobileMenu: false,
+    serviceApp: serviceApp()
+}" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP BMIS - Dịch vụ Tiện ích</title>
+
+    <!-- ANTI-FLICKER SCRIPT -->
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- External Fonts & Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '480px' },
+                    colors: {
+                        scp: {
+                            bg: '#f1f5f9', card: '#ffffff',
+                            primary: '#2563eb', accent: '#3b82f6',
+                            text: '#0f172a', muted: '#64748b'
+                        }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.98)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        function serviceApp() {
+            return {
+                services: [],
+                searchQuery: '',
+                filterCategory: 'all',
+                selectedService: null,
+
+                init() {
+                    // Mock Services Data
+                    this.services = [
+                        { id: 'SVC-GYM', name: 'Phòng tập Gym & Yoga', category: 'Health', price: 500000, unit: 'tháng', users: 1250, status: 'active', desc: 'Hệ thống phòng tập hiện đại, mở cửa 05:00 - 22:00 hàng ngày.', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80' },
+                        { id: 'SVC-POOL', name: 'Bể bơi 4 mùa', category: 'Health', price: 800000, unit: 'tháng', users: 850, status: 'active', desc: 'Bể bơi tiêu chuẩn Olympic, hệ thống lọc nước muối điện phân.', image: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=600&q=80' },
+                        { id: 'SVC-BBQ', name: 'Khu nướng BBQ', category: 'Entertainment', price: 200000, unit: 'giờ', users: 45, status: 'active', desc: 'Khu vực nướng ngoài trời, bao gồm bếp nướng và bàn ghế.', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80' },
+                        { id: 'SVC-CLEAN', name: 'Vệ sinh căn hộ', category: 'Household', price: 80000, unit: 'giờ', users: 320, status: 'active', desc: 'Dịch vụ dọn dẹp vệ sinh theo giờ, nhân viên chuyên nghiệp.', image: 'https://images.unsplash.com/photo-1581578731117-104f2a41272c?auto=format&fit=crop&w=600&q=80' },
+                        { id: 'SVC-EV', name: 'Sạc xe điện', category: 'Utility', price: 3500, unit: 'kWh', users: 150, status: 'active', desc: 'Trạm sạc nhanh tại hầm B1, hỗ trợ các dòng xe VinFast, Tesla.', image: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=600&q=80' },
+                        { id: 'SVC-LAUNDRY', name: 'Giặt là cao cấp', category: 'Household', price: 15000, unit: 'kg', users: 210, status: 'maintenance', desc: 'Dịch vụ giặt sấy, là hơi, giao nhận tại lễ tân.', image: 'https://images.unsplash.com/photo-1517677208171-0bc6799a4c6d?auto=format&fit=crop&w=600&q=80' },
+                        { id: 'SVC-COMMUNITY', name: 'Phòng Sinh hoạt CĐ', category: 'Entertainment', price: 0, unit: 'lượt', users: 50, status: 'active', desc: 'Không gian tổ chức sự kiện, họp cư dân (Miễn phí đăng ký trước).', image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80' },
+                        { id: 'SVC-PARKING', name: 'Gửi xe ô tô', category: 'Utility', price: 1500000, unit: 'tháng', users: 450, status: 'full', desc: 'Vị trí đỗ xe cố định tại hầm B2.', image: 'https://images.unsplash.com/photo-1470224114654-ee01d0f5b9d2?auto=format&fit=crop&w=600&q=80' }
+                    ];
+                },
+
+                get activeCount() { return this.services.filter(s => s.status === 'active').length; },
+                get totalRevenue() { return this.services.reduce((sum, s) => sum + (s.price * s.users), 0); },
+
+                get filteredServices() {
+                    return this.services.filter(s => {
+                        const matchSearch = this.searchQuery === '' || s.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        const matchCategory = this.filterCategory === 'all' || s.category === this.filterCategory;
+                        return matchSearch && matchCategory;
+                    });
+                }
+            }
+        }
+    </script>
+</head>
+
+<body :class="darkMode ? 'dark' : 'light'" class="overflow-hidden" x-data="serviceApp">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-cloak
+        class="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
+        @click="mobileMenu = false" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar transition-transform duration-300 z-[70]" :class="{ 'mobile-open': mobileMenu }">
+
+            <div class="logo-frame flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <i class="fas fa-city text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-slate-900 leading-none dark:text-white">SCP
+                            BMIS</h1>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Smart Building
+                        </p>
+                    </div>
+                </div>
+                <button @click="mobileMenu = false" class="lg:hidden p-2 text-slate-400 hover:text-blue-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-grow py-6 overflow-y-auto custom-scroll space-y-1">
+                <div class="px-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hệ thống quản trị
+                </div>
+
+                <a href="../index.html" class="nav-link flex items-center">
+                    <i class="fas fa-city"></i> BMIS
+                </a>
+                <a href="facility.html" class="nav-link flex items-center">
+                    <i class="fas fa-tools"></i> Bảo trì Kỹ thuật
+                </a>
+                <a href="audit.html" class="nav-link flex items-center">
+                    <i class="fas fa-clipboard-check"></i> Tiêu chuẩn Vận hành
+                </a>
+                <a href="../show-app.html" target="_blank" class="nav-link flex items-center group">
+                    <i class="fas fa-mobile-alt"></i> App Mobile cư dân
+                    <i
+                        class="fas fa-external-link-alt text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity text-slate-400"></i>
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cư dân & Căn
+                    hộ</div>
+
+                <a href="residents.html" class="nav-link flex items-center">
+                    <i class="fas fa-users"></i> Danh sách cư dân
+                </a>
+                <a href="apartment-map.html" class="nav-link flex items-center">
+                    <i class="fas fa-map"></i> Sơ đồ căn hộ
+                </a>
+                <a href="requests.html" class="nav-link flex items-center">
+                    <i class="fas fa-comment-dots"></i> Yêu cầu & Phản ánh
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dịch vụ & Tài
+                    chính</div>
+
+                <a href="services.html" class="nav-link active flex items-center">
+                    <i class="fas fa-concierge-bell"></i> Dịch vụ tiện ích
+                </a>
+                <a href="billing.html" class="nav-link flex items-center">
+                    <i class="fas fa-file-invoice-dollar"></i> Phí quản lý & Nước
+                </a>
+                <a href="equipment.html" class="nav-link flex items-center">
+                    <i class="fas fa-server"></i> Hệ thống kỹ thuật
+                </a>
+
+                <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">An ninh & Vệ
+                    sinh</div>
+
+                <a href="staff.html" class="nav-link flex items-center">
+                    <i class="fas fa-user-tie"></i> Nhân sự BQL
+                </a>
+                <a href="housekeeping.html" class="nav-link flex items-center">
+                    <i class="fas fa-broom"></i> Vệ sinh & Cảnh quan
+                </a>
+                <a href="security.html" class="nav-link flex items-center">
+                    <i class="fas fa-shield-alt"></i> An ninh bảo vệ
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-slate-100 flex items-center justify-between bg-white mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Online</span>
+                </div>
+                <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-container bg-slate-50">
+            <header
+                class="main-header bg-white border-b border-slate-200 h-[80px] px-8 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileMenu = true"
+                        class="lg:hidden p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Trung tâm Chỉ huy SCP
+                        </h2>
+                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">DỊCH VỤ &
+                            TIỆN ÍCH</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-right">
+                    <div class="hidden xs:block">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Tổng số Dịch vụ</p>
+                        <p class="text-sm md:text-xl font-black text-blue-600 tracking-tighter"
+                            x-text="services.length"></p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll animate-fade-in">
+                <div class="space-y-6">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <div class="stat-card border-blue-500/20 bg-blue-50/50 dark:bg-blue-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Hoạt
+                                        động</p>
+                                    <p class="text-2xl font-black text-blue-600" x-text="activeCount"></p>
+                                </div>
+                                <i class="fas fa-store-alt text-3xl text-blue-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Cư dân
+                                        sử dụng</p>
+                                    <p class="text-2xl font-black text-emerald-600">3,250</p>
+                                </div>
+                                <i class="fas fa-users text-3xl text-emerald-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-purple-500/20 bg-purple-50/50 dark:bg-purple-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Doanh
+                                        thu (tháng)</p>
+                                    <p class="text-2xl font-black text-purple-600"
+                                        x-text="(totalRevenue/1000000).toFixed(0) + 'tr'"></p>
+                                </div>
+                                <i class="fas fa-wallet text-3xl text-purple-500/30"></i>
+                            </div>
+                        </div>
+
+                        <div class="stat-card border-orange-500/20 bg-orange-50/50 dark:bg-orange-900/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Đánh
+                                        giá</p>
+                                    <p class="text-2xl font-black text-orange-600">4.8/5</p>
+                                </div>
+                                <i class="fas fa-star text-3xl text-orange-500/30"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Search -->
+                    <div class="stat-card">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" x-model="searchQuery" placeholder="Tìm dịch vụ..."
+                                    class="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-medium outline-none focus:border-blue-500"
+                                    :class="darkMode ? 'text-white' : 'text-slate-800'">
+                            </div>
+                            <select x-model="filterCategory"
+                                class="px-4 py-3 rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-transparent text-sm font-bold outline-none focus:border-blue-500"
+                                :class="darkMode ? 'text-white' : 'text-slate-800'">
+                                <option value="all">Tất cả Nhóm</option>
+                                <option value="Health">Sức khỏe & Thể thao</option>
+                                <option value="Entertainment">Giải trí</option>
+                                <option value="Household">Gia đình</option>
+                                <option value="Utility">Tiện ích chung</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Service List -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <template x-for="item in filteredServices" :key="item.id">
+                            <div @click="selectedService = item"
+                                class="stat-card cursor-pointer hover:scale-[1.02] transition-all p-0 overflow-hidden group">
+                                <div class="h-32 bg-slate-200 relative">
+                                    <img :src="item.image" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                </div>
+                                <div class="p-6">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase"
+                                                x-text="item.category"></p>
+                                            <h4 class="text-lg font-black"
+                                                :class="darkMode ? 'text-white' : 'text-slate-900'" x-text="item.name">
+                                            </h4>
+                                        </div>
+                                        <span class="px-2 py-1 rounded text-[8px] font-black uppercase"
+                                            :class="item.status === 'active' ? 'bg-green-100 text-green-700' : (item.status === 'full' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500')"
+                                            x-text="item.status === 'active' ? 'Hoạt động' : (item.status === 'full' ? 'Hết chỗ' : 'Bảo trì')"></span>
+                                    </div>
+                                    <p class="text-sm text-slate-500 mb-4 h-10 line-clamp-2" x-text="item.desc"></p>
+
+                                    <div
+                                        class="flex items-center justify-between border-t border-slate-100 dark:border-slate-700 pt-4">
+                                        <div>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase">Đơn giá</p>
+                                            <p class="text-lg font-black text-blue-600"
+                                                x-text="item.price === 0 ? 'Miễn phí' : item.price.toLocaleString() + 'đ'">
+                                            </p>
+                                            <p class="text-[9px] font-bold text-slate-400">/ <span
+                                                    x-text="item.unit"></span></p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase">Đăng ký</p>
+                                            <p class="text-lg font-black"
+                                                :class="darkMode ? 'text-white' : 'text-slate-800'" x-text="item.users">
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Detail Modal -->
+    <div x-show="selectedService" x-cloak @click.away="selectedService = null"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div @click.stop
+            class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-fade-in">
+            <div class="h-48 relative">
+                <img :src="selectedService?.image" class="w-full h-full object-cover">
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
+                    <button @click="selectedService = null"
+                        class="absolute top-4 right-4 text-white hover:scale-110 transition-transform bg-black/20 p-2 rounded-full backdrop-blur-sm"><i
+                            class="fas fa-times"></i></button>
+                    <h3 class="text-2xl font-black text-white" x-text="selectedService?.name"></h3>
+                    <p class="text-white/80 text-sm font-bold uppercase" x-text="selectedService?.category"></p>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300 italic"
+                        x-text="selectedService?.desc"></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Chi phí</p>
+                        <p class="text-2xl font-black text-blue-600"
+                            x-text="selectedService?.price === 0 ? 'Miễn phí' : selectedService?.price.toLocaleString() + 'đ'">
+                        </p>
+                        <p class="text-[10px] text-slate-500">/ <span x-text="selectedService?.unit"></span></p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Hiện có</p>
+                        <p class="text-2xl font-black text-slate-800 dark:text-white" x-text="selectedService?.users">
+                        </p>
+                        <p class="text-[10px] text-slate-500">Người đăng ký</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button
+                        class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-black uppercase text-xs hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                        <i class="fas fa-edit mr-2"></i>Quản lý Đăng ký
+                    </button>
+                    <button
+                        class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-lg font-black uppercase text-xs hover:bg-slate-200 transition-colors">
+                        <i class="fas fa-cog mr-2"></i>Cấu hình
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

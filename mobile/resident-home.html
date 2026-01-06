@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="{ tab: 'home', darkMode: localStorage.getItem('darkMode') === 'true' }"
+    :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SCP Resident - Cư dân Thông minh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        scp: {
+                            bg: '#f8fafc',
+                            card: '#ffffff',
+                            primary: '#2563eb', // Blue-600
+                            secondary: '#64748b' // Slate-500
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glow': '0 0 15px rgba(37, 99, 235, 0.3)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #f8fafc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dark .app-container {
+            background-color: #0f172a;
+        }
+
+        .app-content {
+            padding-bottom: 90px;
+            height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .app-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 440px;
+            height: 70px;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .dark .bottom-nav {
+            background: rgba(30, 41, 59, 0.9);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: #2563eb;
+            transform: translateY(-5px);
+        }
+
+        .nav-item.active i {
+            filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.4));
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Banner Gradient */
+        .banner-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100" x-data="{
+    notifications: [
+        { id: 1, title: 'Thông báo phí QL T10/2026', time: '10:30 AM', type: 'bill', read: false },
+        { id: 2, title: 'Bảo trì thang máy P1', time: 'Hôm qua', type: 'maintenance', read: true },
+        { id: 3, title: 'Phiếu đăng ký BBQ đã duyệt', time: 'Hôm kia', type: 'service', read: true }
+    ],
+    myBill: {
+        month: '10/2026',
+        amount: 2450000,
+        status: 'Unpaid',
+        deadline: '15/10/2026'
+    }
+}">
+
+    <div class="app-container transition-colors duration-300">
+
+        <!-- Header Section -->
+        <header
+            class="p-6 pt-12 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0 z-40 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 p-0.5">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
+                        alt="Avatar" class="w-full h-full rounded-full object-cover">
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Xin chào,</p>
+                    <h1 class="text-sm font-black text-slate-800 dark:text-white leading-none">Lê Văn C</h1>
+                    <span
+                        class="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded mt-1 inline-block">A-1501</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button @click="darkMode = !darkMode"
+                    class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                    <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
+                </button>
+                <button
+                    class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 flex items-center justify-center relative hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                    <i class="fas fa-bell"></i>
+                    <span
+                        class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-900"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="app-content p-6 space-y-6">
+
+            <!-- Bill Status Card -->
+            <div
+                class="w-full rounded-3xl banner-gradient p-6 text-white shadow-glow relative overflow-hidden group cursor-pointer transition-transform active:scale-95">
+                <div
+                    class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700">
+                </div>
+
+                <div class="relative z-10 flex justify-between items-start">
+                    <div>
+                        <p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Phí quản lý T10</p>
+                        <h2 class="text-3xl font-black tracking-tight" x-text="myBill.amount.toLocaleString() + 'đ'">
+                        </h2>
+                        <p class="text-[10px] font-bold mt-2 flex items-center gap-1">
+                            <i class="fas fa-clock text-orange-300"></i> Hạn chót: <span
+                                x-text="myBill.deadline"></span>
+                        </p>
+                    </div>
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <i class="fas fa-file-invoice-dollar text-xl"></i>
+                    </div>
+                </div>
+
+                <div class="relative z-10 mt-6 pt-4 border-t border-white/20 flex gap-3">
+                    <button
+                        class="flex-1 bg-white text-blue-600 py-2.5 rounded-xl text-xs font-black uppercase shadow-lg hover:shadow-xl transition-all active:scale-95">Thanh
+                        toán ngay</button>
+                </div>
+            </div>
+
+            <!-- Quick Actions Grid -->
+            <div>
+                <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 opacity-50">
+                    Tiện ích nhanh</h3>
+                <div class="grid grid-cols-4 gap-3">
+                    <button class="flex flex-col items-center gap-2 group">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center text-xl shadow-sm group-active:scale-90 transition-all border border-blue-100 dark:border-blue-800/50">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase text-center">Mở
+                            cửa</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-2 group">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 flex items-center justify-center text-xl shadow-sm group-active:scale-90 transition-all border border-indigo-100 dark:border-indigo-800/50">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase text-center">Đk
+                            xe</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-2 group">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center text-xl shadow-sm group-active:scale-90 transition-all border border-emerald-100 dark:border-emerald-800/50">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase text-center">Mời
+                            khách</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-2 group">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center text-xl shadow-sm group-active:scale-90 transition-all border border-orange-100 dark:border-orange-800/50">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase text-center">Sự
+                            cố</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Notifications List -->
+            <div>
+                <div class="flex justify-between items-end mb-4">
+                    <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest opacity-50">
+                        Tin tức & Sự kiện</h3>
+                    <a href="#" class="text-[10px] font-bold text-blue-600">Xem tất cả</a>
+                </div>
+
+                <div class="space-y-3">
+                    <template x-for="notif in notifications" :key="notif.id">
+                        <div
+                            class="glass-card p-4 rounded-2xl flex gap-4 items-center shadow-sm active:scale-[0.98] transition-transform">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm"
+                                :class="{
+                                    'bg-blue-500 shadow-lg shadow-blue-200': notif.type === 'bill',
+                                    'bg-orange-500 shadow-lg shadow-orange-200': notif.type === 'maintenance',
+                                    'bg-green-500 shadow-lg shadow-green-200': notif.type === 'service'
+                                }">
+                                <i class="fas" :class="{
+                                    'fa-file-invoice': notif.type === 'bill',
+                                    'fa-tools': notif.type === 'maintenance',
+                                    'fa-check-circle': notif.type === 'service'
+                                }"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xs font-bold text-slate-800 dark:text-white"
+                                    :class="{'opacity-70': notif.read}" x-text="notif.title"></h4>
+                                <p class="text-[10px] text-slate-400 font-medium mt-0.5" x-text="notif.time"></p>
+                            </div>
+                            <div x-show="!notif.read" class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Promo/Ad Banner -->
+            <div class="w-full h-32 rounded-3xl overflow-hidden relative shadow-sm mt-4">
+                <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80"
+                    class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center p-6">
+                    <div>
+                        <span
+                            class="bg-yellow-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Mới</span>
+                        <h3 class="text-white font-black uppercase text-lg leading-tight mt-1">Spa thư giãn<br>Cuối tuần
+                        </h3>
+                        <p class="text-white/80 text-[9px]">Giảm 20% cho cư dân Block A</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" @click.prevent="tab = 'home'" class="nav-item" :class="{'active': tab === 'home'}">
+                <i class="fas fa-home text-lg"></i>
+            </a>
+            <a href="#" @click.prevent="tab = 'services'" class="nav-item" :class="{'active': tab === 'services'}">
+                <i class="fas fa-th-large text-lg"></i>
+            </a>
+            <div class="w-12"></div> <!-- Spacer for FAB -->
+            <a href="#" @click.prevent="tab = 'billing'" class="nav-item" :class="{'active': tab === 'billing'}">
+                <i class="fas fa-wallet text-lg"></i>
+            </a>
+            <a href="#" @click.prevent="tab = 'profile'" class="nav-item" :class="{'active': tab === 'profile'}">
+                <i class="fas fa-user text-lg"></i>
+            </a>
+
+            <!-- Floating Action Button (FAB) -->
+            <button
+                class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl shadow-xl shadow-blue-400/50 hover:scale-110 transition-transform active:scale-90 border-4 border-[#f8fafc] dark:border-[#0f172a]">
+                <i class="fas fa-plus"></i>
+            </button>
+        </nav>
+
+    </div>
+
+</body>
+
+</html>
